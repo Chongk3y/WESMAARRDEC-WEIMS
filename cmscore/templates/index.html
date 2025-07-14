@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load static %}
+
+<div class = "fade-in">
+    <div class="jumbotron jumbotron-fluid text-white">
+        <div class="container">
+            <!-- Carousel -->
+            <div id="jumbotronCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner vertical_center">
+                    {% for slide in carousel_slides %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <div class="carousel-gradient">
+                        </div>
+                        <img src="{{ slide.image.url }}" class="img-fluid vertical_center" alt="{{ slide.name }}">
+                        <div class="carousel-caption">
+                            <h1>{{ slide.name }}</h1>
+                            <p>{{ slide.detail }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#jumbotronCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#jumbotronCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+            <!-- End Carousel -->
+        </div>
+    </div>
+    <br>
+    <div class="container features">
+        <div class="row" style="display: flex;
+    justify-content: space-evenly;">
+            {% for photo in latest_news_photos %}
+            <div class="col-md-4">
+              <a href="{% url 'detail' photo.category.slug photo.slug %}" style="text-decoration: none;">
+                {% if photo.image %}
+                  <img src="{{ photo.image.url }}" class="img-fluid">
+                {% endif %}
+                <span class="text-black text-center">
+                  <p class="mb-1">{{ photo.title }}</p>
+                  <p class="mb-1">{{ photo.intro|truncatechars:50 }}</p>
+                </span>
+              </a>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+        <section class="container">
+            <hr class="custom-hr">
+            <div class="row g-5">
+                <div class="col-lg-6">
+                    <h1 style="color: #008001;">Latest News</h1>
+                    <hr class="custom-hr">
+                    {% for photo in latest_news_photos %}
+                    <a href="#" class="link-underline link-underline-opacity-0" style="color: #008001;">
+                        <div class="">
+                        <a href="{% url 'detail' photo.category.slug photo.slug %}" style="text-decoration: none; color: #008001;">
+                            <h2>{{ photo.title }}</h2>
+                            <p>{{ photo.intro|truncatechars:100 }}</p>
+                        </a>
+                        </div>
+                        <hr class="custom-hr">
+                        {% endfor %}
+                    </a>
+                </div>
+                <div class="col-lg-6">
+                    {% if latest_event_photo %}
+                    <h1>Event this month</h1>
+                    <div class="event-photo-wrapper">
+                        <a href="">
+                            {%if latest_event_photo.image%}
+                            <img src="{{ latest_event_photo.image.url }}" class="img-fluid" alt="event">
+                            {%endif%}
+                        </a>
+                        <div class="event-caption">
+                            <span>{{ latest_event_photo.title }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+
+            <div class="container">
+                <section class="text-center" style="color: #43b14b; padding-bottom: 10vh;">
+                    <hr class="custom-hr">
+                    <h1>Consortium Member Institution</h1>
+                    <div class="justify-content-center" id="map-placeholder" style="max-width: 1000px; margin: auto;">
+                        <!-- Map Container -->
+                        <div id="map" style="height: 500px;"></div>
+                    </div>
+                </section>
+            </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+  // Initialize the map and set the view to Zamboanga City
+  var map = L.map('map').setView([6.9214, 122.0790], 13);
+
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Fetch consortium data and add markers to the map
+  fetch('/cmi-data/')
+    .then(response => response.json())
+    .then(data => {
+      data.forEach(consortium => {
+        if (consortium.lat && consortium.long) {
+          var icon = L.icon({
+            iconUrl: consortium.logo_url,
+            iconSize: [50, 50], // Adjust the size as needed
+            iconAnchor: [25, 50], // Adjust the anchor as needed
+            popupAnchor: [0, -50] // Adjust the popup anchor as needed
+          });
+
+          var marker = L.marker([consortium.lat, consortium.long], { icon: icon }).addTo(map);
+          marker.bindPopup(`<strong>${consortium.name}</strong><br><a href="/cmi/${consortium.id}/">View this CMI</a>`);
+        }
+      });
+
+      // Add click event listener to markers
+      map.on('click', function(e) {
+        // Display coordinates of the clicked point
+        console.log('You clicked the map at: ' + e.latlng);
+      });
+    })
+    .catch(error => console.error('Error fetching consortium data:', error));
+});
+
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var myCarousel = document.getElementById('jumbotronCarousel');
+        var carousel = new bootstrap.Carousel(myCarousel);
+
+        myCarousel.addEventListener('slide.bs.carousel', function () {
+            var activeSlide = myCarousel.querySelector('.carousel-item.active');
+            activeSlide.classList.add('slide-in');
+            setTimeout(function () {
+                activeSlide.classList.remove('slide-in');
+            }, 5000); // Adjust the duration of the slide-in animation as needed (in milliseconds)
+        });
+    });
+</script>
+
+
+
+<style>
+    body {
+        color: #43b14b !important; /* Set text color for the whole website */
+    }
+    .carousel-inner {
+        max-width: 1290px; /* Limit carousel width */
+        max-height: 500px; /* Limit carousel height */
+        overflow: hidden;
+    }
+    .carousel-gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 10%, rgba(0, 0, 0, 0));
+}
+.carousel-item
+{
+    height: 80vh; /* or any other fixed value or percentage */
+  position: relative;
+}
+.carousel-item img
+{
+    z-index: -1;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.carousel-caption {
+    bottom: 10%;
+  text-align: left;
+}
+.carousel-item.slide-in {
+    animation: slideIn 1.5s forwards;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+    .custom-hr {
+        border-color: #008001;; /* Set border color to match text color */
+        border-width: 3px; /* Set border width to make it thicker */
+    }
+    .event-photo-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+
+    .event-photo-wrapper img {
+        display: block;
+        width: 100%;
+        height: auto;
+    }
+
+    .event-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+        color: white;
+        padding: 10px;
+        width: 100%; /* Optional: Adjust width as needed */
+        box-sizing: border-box;
+        font-size: 14px; /* Adjust font size as needed */
+    }
+
+    .event-caption span {
+        display: block;
+        text-align: left; /* Align text to the left */
+    }
+
+    .vertical_center {
+    display: flex;
+    align-items: center;
+}
+@media only screen and (max-width: 426px){
+    .features
+    {
+        display: none;
+    }
+}
+</style>
+
+{% endblock content %}

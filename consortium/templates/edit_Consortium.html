@@ -1,0 +1,101 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+   .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit WESMAARRDEC</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        {{ form.consortium_code.label_tag }}
+                        {{ form.consortium_code }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.consortium_name.label_tag }}
+                        {{ form.consortium_name }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.consortium_address.label_tag }}
+                        {{ form.consortium_address }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_geolat">Latitude:</label>
+                        {{ form.geolat }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_geolong">Longitude:</label>
+                        {{ form.geolong }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.consortium_logo.label_tag }}
+                        {{ form.consortium_logo }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.mission.label_tag }}
+                        {{ form.mission }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.vision.label_tag }}
+                        {{ form.vision }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.consortium_desc.label_tag }}
+                        {{ form.consortium_desc }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.consortium_objectives.label_tag }}
+                        {{ form.consortium_objectives }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.url.label_tag }}
+                        {{ form.url }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.fb_url.label_tag }}
+                        {{ form.fb_url }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.yt_url.label_tag }}
+                        {{ form.yt_url }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.telno.label_tag }}
+                        {{ form.telno }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button href="{% url 'CMI_View' %}" class="btn btn-danger">cancel</button>
+                    </div>
+                    <div class="mb-3 float-end" style="padding-right:20px ;">
+                        <button type="submit" class="btn btn-success">Edit Consortium</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

@@ -1,0 +1,150 @@
+{% extends 'base.html' %} {% load static %}
+
+{% block content %}
+
+<div class="container mt-6"> 
+    <hr class=custom-hr> 
+        <div class="container row"> 
+            <div class="col ComDetails"> 
+                <div class="ComDetails-inner"> 
+                    <h1>{{ commodity.name }}</h1> 
+                    <p>{{ commodity.detail }}</p> 
+                </div> 
+            </div> 
+            <img src="{{ commodity.img.url }}" alt="{{ commodity.name }}" class="comImage img-fluid"> 
+        </div> 
+        <hr class=custom-hr> 
+</div> 
+<div class="container helpsection">
+    <h1>How can we help?</h1>
+    <div class="button-container">
+        <div class="row g-2">
+            <div class="col">
+                <button class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#expertModal">Find an expert</button>
+            </div>
+            <div class="col">
+                <button class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#farmModal">Find a Farm</button>
+            </div>
+            <div class="col">
+                <button class="btn btn-primary btn-custom" data-bs-toggle="modal" data-bs-target="#financialModal">Find Financial Support</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="expertModal" tabindex="-1" aria-labelledby="expertModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="expertModalLabel">Find an Expert</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal content for expert modal -->
+                <p>Modal body for expert modal</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Farm Modal -->
+<div class="modal fade" id="farmModal" tabindex="-1" aria-labelledby="farmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="farmModalLabel">Find a Farm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal content for farm modal -->
+                <p>Modal body for farm modal</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Financial Modal -->
+<div class="modal fade" id="financialModal" tabindex="-1" aria-labelledby="financialModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="financialModalLabel">Find Financial Support</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal content for financial modal -->
+                <p>Modal body for financial modal</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<style> 
+.ComDetails { 
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    }
+
+.ComDetails-inner { 
+    text-align: center;
+     
+}
+.ComDetails-inner h1{ 
+    color: #43b14b;
+     
+}
+.ComDetails-inner p{ 
+    color: #66b365;
+     
+}
+.comImage { 
+    max-height: 200px; 
+    width: auto; 
+    } 
+
+.custom-hr {
+    border-color: rgb(102, 179, 101); /* Set border color to match text color */
+    border-width: 3px; /* Set border width to make it thicker */
+    }
+.helpsection{
+    justify-content: space-between;
+    color: #43b14b;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 5vh;
+}
+.button-container {
+    width: 100%;
+    height: 100%;
+}
+.btn-custom {
+            width: 100%;
+            height: 80%;
+            padding: 15px 30px; /* Adjust padding for longer buttons */
+            min-width: 200px; /* Set a minimum width for the buttons */
+            background-color: #43b14b;
+            border-color: transparent;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+.btn-custom:hover{
+    background-color: #66b365;
+    border-color: transparent;
+}
+.btn-custom:active{
+    background-color: #43b14b !important;
+    border-color: transparent !important;
+}
+</style> 
+{% endblock %}

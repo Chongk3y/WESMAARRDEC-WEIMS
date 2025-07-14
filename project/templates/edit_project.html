@@ -1,0 +1,131 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+    .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Project</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_title">Title:</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_prog_id">Program:</label>
+                        {{ form.prog_id }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_status">Status:</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_proj_description">Project Description:</label>
+                        {{ form.proj_description }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_proj_type">Project Type:</label>
+                        {{ form.proj_type }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_commodity">Commodity:</label>
+                        {{ form.commodity }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_proj_leader">Project Leader:</label>
+                        {{ form.proj_leader }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_priority">Priority:</label>
+                        {{ form.priority }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_sdg_no">SDG No:</label>
+                        {{ form.sdg_no }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_proj_team">Project Team:</label>
+                        {{ form.proj_team }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_proj_stakeholder">Project Stakeholder:</label>
+                        {{ form.proj_stakeholder }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_impl_agency">Implementing Agency:</label>
+                        {{ form.impl_agency }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_co_impl_agency">Co-Implementing Agency:</label>
+                        {{ form.co_impl_agency }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_coop_agency">Cooperating Agency:</label>
+                        {{ form.coop_agency }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_fund_agency">Funding Agency:</label>
+                        {{ form.fund_agency }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_start_date">Start Date:</label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_end_date">End Date:</label>
+                        {{ form.end_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_final_impl_date">Final Implementation Date:</label>
+                        {{ form.final_impl_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_duration">Duration:</label>
+                        {{ form.duration }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_approved_budget">Approved Budget:</label>
+                        {{ form.approved_budget }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_approved_date">Approved Date:</label>
+                        {{ form.approved_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_daterequestedext">Date Requested Extension:</label>
+                        {{ form.daterequestedext }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_requested_by">Requested By:</label>
+                        {{ form.requested_by }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_ext_duration">Extension Duration:</label>
+                        {{ form.ext_duration }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_proj_file">Project File:</label>
+                        {{ form.proj_file }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_remarks">Remarks:</label>
+                        {{ form.remarks }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Project</button>
+                    </div>
+                </form>
+            </div>
+       </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

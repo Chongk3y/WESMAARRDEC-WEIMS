@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="row justify-content-center">
+        <div class="col-10">
+            <div class="card text-center" style="border: none;">
+                <div class="card-body">
+                  <h2 class="page-title" style="color: #66b365; font-weight: 500;">The Consortium</h2>
+                </div>
+                <hr>
+                {% for consortium in consortiums %}
+               <span>
+                    <p>
+                        {{consortium.consortium_desc}}
+                    </p>
+                </span>
+                <div class="text-center">
+                    <img src="{{consortium.consortium_logo.url}}" style="width: 80%;" class="mx-auto d-block">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-10">
+            <div class="card" style="border:none;">
+                <hr>
+                <div class="row align-items-center">
+                    <div class="col-6 text-center">
+                        <span>
+                            <p>
+                               {{consortium.vision}}
+                            </p>
+                        </span>
+                    </div>
+                    <div class="col-6 text-center">
+                        <h2 class="page-title" style="color: #66b365; font-weight: 500; padding-top: 10vh; padding-bottom: 10vh;">Vision</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center" id="ViMi">
+        <div class="col-10">
+            <div class="card" style="border:none;">
+                <hr>
+                <div class="row align-items-center">
+                    <div class="col-6 text-center">
+                        <h2 class="page-title" style="color: #66b365; font-weight: 500; padding-top: 10vh; text-wrap: nowrap;">Mission</h2>
+                    </div>
+                    <div class="col-6 text-center" style="padding-top: 10vh;">
+                        <span>
+                            <p>
+                                {{consortium.mission}}
+                            </p>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<style>
+    p {
+        font-size: 1.1rem;
+    }
+    h2 {
+        font-size: 3rem;
+        margin-bottom: 0; /* Remove bottom margin to align with the paragraph */
+    }
+    #ViMi{
+        padding-bottom: 10vh;
+    }
+</style>
+{% endblock %}

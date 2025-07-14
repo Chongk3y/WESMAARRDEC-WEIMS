@@ -1,0 +1,146 @@
+{% extends 'cmibase.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5">
+    <h1 style="text-align: center; font-weight: 600; color: #008001;">User List</h1>
+    <hr>
+    <div class="container d-flex" style="padding: 0;">
+        <div class="col" style="display: flex; justify-content: end;">
+            <form method="get" action="{% url 'accountman' %}" class="mb-3 w-100 formhead">
+                <div class="input-group row gx-2 gy-2">
+                    <div class="col-12-sm col-lg col-md">
+                        <input type="text" name="q" class="form-control" placeholder="Search..." value="{{ request.GET.q }}">
+                    </div>
+                    <div class="col-12-sm col-md-auto col-5-lg">
+                        <button type="submit" class="btn btn-success w-100">Search</button>
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <a href="{% url 'registration' %}" class="btn btn-success w-100">Add User</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th style="text-align: end;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in page_obj %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{user.first_name}} {{user.last_name}}</td>
+                    <td>
+                        {% if user.is_superuser or user.is_staff %}
+                            Admin
+                        {% endif %}
+                        {% if user.researcher %}
+                            Researcher
+                        {% endif %}
+                        {% if user.secretariat %}
+                            Secretariat
+                        {% endif %}
+                        {%if user.stakeholder %}
+                            Stakeholder
+                        {% endif %}
+                    </td>
+                    <td>{{ user.is_active|yesno:"Active,In-Active" }}</td>
+                    <td style="text-align: end;">
+                        <a href="{% url 'edit_user' user.id %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen-to-square"></i></a>
+                        <a href="{% url 'delete_user' user.id %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-trash"></i></a>
+                        <form action="{% url 'reset_password' user.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">Reset Password</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-wrapper mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                       <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+<style>
+    .btn-sm{
+        background-color: #43b14b;
+        border-color: #43b14b;
+    }
+    .btn-sm:hover{
+        background-color: #008001;
+        border-color: #008001;
+    }
+    .btn-sm:active{
+        background-color: #43b14b;
+        border-color: #43b14b;
+    }
+    .btn-sm:focus-visible{
+        background-color: #43b14b;
+        border-color: #43b14b;
+    }
+    .btn-success{
+        background-color: #43b14b;
+        border-color: #43b14b;
+    }
+    .btn-success:hover{
+        background-color: #008001;
+        border-color: #008001;
+    }
+    .btn-success:active{
+        background-color: #008001;
+        border-color: #008001;
+    }
+    .pagination .page-link {
+        color: #66b365; /* Change the color of pagination links to #66b365 */
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #66b365; /* Change the background color of active pagination link to #66b365 */
+        border-color: #66b365; /* Change the border color of active pagination link to #66b365 */
+        color: white; /* Change the text color of active pagination link to white */
+    }
+    @media only screen and (max-width: 426px){
+        .btn-sm{
+            margin: 10px;
+        }
+        .formhead
+        {
+            display: flex;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

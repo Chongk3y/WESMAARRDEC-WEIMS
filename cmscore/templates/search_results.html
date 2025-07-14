@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="mt-5 container search">
+    <h1>Search Results for "{{ query }}"</h1>
+    <h2>CMI</h2>
+    {% for cmi in cmis %}
+    <p class="search-results">
+        <a class="search-links" href="{% url 'cmi' cmi_id=cmi.pk %}">
+            {{ cmi.name }}
+        </a>
+    </p>
+    <p class="search-results">
+        {{ cmi.detail|truncatewords:50 }}
+    </p>
+    <hr>
+    <br>
+    {% empty %}
+       No cmi found.
+    {% endfor %}
+    
+    <h2>Posts</h2>
+        {% for event in events %}
+        <p class="search-results">
+            <a class="search-links" href="{% url 'detail' event.category.slug event.slug %}">
+                {{ event.title }} 
+            </a>
+        </p>
+            <p class="search-results">
+                {{event.intro|truncatewords:50 }}
+            </p>
+            <hr>
+            <br>
+            {% empty %}
+                No events found.
+            {% endfor %}
+        
+    <h2>Commodities</h2>
+        {% for commodity in commodities %}
+        <p class="search-results">
+            <a class="search-links" href="{% url 'commodetail' commodity.com_id %}">
+                {{ commodity.name }} 
+            </a>
+        </p>
+        <p class="search-results">
+            {{ commodity.detail |truncatewords:50}}
+        </p>
+        <hr>
+        <br>
+            {% empty %}
+            No commodities found.
+            {% endfor %}
+      
+    <h2>Programs</h2>
+        {% for program in programs %}
+        <p class="search-results">
+            <a class="search-links" href="{% url 'program_details' prog_id=program.prog_id %}">
+                {{ program.title }} 
+            </a>        
+        </p>
+        <p class="search-results">
+        {{program.prog_description|truncatewords:50}}
+        </p>
+        <hr>
+        <br>
+        {% empty %}
+           No programs found.
+        {% endfor %}
+
+    <h2>Projects</h2>
+        {% for project in projects %}
+        <p class="search-results">
+            <a class="search-links" href ="{% url 'project_detail' project.proj_id %}">
+                {{ project.title }} 
+            </a>
+        </p>
+        <p class="search-results">
+            {{project.snippet}}
+        </p>
+        <hr>
+        <br>
+        {% empty %}
+            No projects found.
+        {% endfor %}
+</div>
+<style>
+    .search-links{
+        text-decoration: none;
+        color: #66b365;
+        font-size: 1.3rem;
+        font-weight: 500;
+    }
+    a:hover{
+        text-decoration: underline;
+        text-decoration-color: #66b365;
+    }
+    .search-results{
+        padding-left: 5vh;
+        margin: 0;
+    }
+    hr{
+        padding: 0;
+        margin: 0;
+        width: 80%;
+    }
+    .search{
+        padding-bottom: 10vh;
+    }
+</style>
+{% endblock %}

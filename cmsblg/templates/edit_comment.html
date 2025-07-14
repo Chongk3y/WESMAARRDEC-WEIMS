@@ -1,0 +1,30 @@
+{%extends 'base.html'%}
+
+{% block content %}
+<style>
+  .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Comment: {{ comment.body }}</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_body">Comment:</label>
+                        <textarea name="body" id="id_body" class="form-control">{{ comment.body }}</textarea>
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Comment</button>
+                        <a href="{% url 'delete_comment' comment.pk %}" class="btn btn-danger">Delete Comment</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

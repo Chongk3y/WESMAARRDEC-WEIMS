@@ -1,0 +1,59 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+    .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Commodity</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_name">Name:</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_cmi_name">CMI Name:</label>
+                        {{ form.cmi_name }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_detail">Detail:</label>
+                        {{ form.detail }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_img">Image:</label>
+                        {{ form.img }}
+                        {% if commodity.img %}
+                            <br>
+                            <img src="{{ commodity.img.url }}" alt="Commodity Image" width="100">
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_produced_by">Produced By:</label>
+                        {{ form.produced_by }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_geolat">Geolocation Latitude:</label>
+                        {{ form.geolat }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_geolong">Geolocation Longitude:</label>
+                        {{ form.geolong }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Commodity</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

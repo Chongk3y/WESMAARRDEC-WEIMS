@@ -1,0 +1,35 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+  .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Priority Area</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_area">Area:</label>
+                        {{ form.area }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_description">Description:</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Priority Area</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

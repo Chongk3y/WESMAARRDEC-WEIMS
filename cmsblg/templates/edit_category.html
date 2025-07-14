@@ -1,0 +1,37 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+  .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Category: {{ category.title }}</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_title">Title:</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_caption">Caption:</label>
+                        {{ form.caption }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_slug">Slug:</label>
+                        {{ form.slug }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Category</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

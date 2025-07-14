@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div class="mt-5 container">
+    <h2>Contact Us</h2>
+    <hr class="custom hr">
+    <div class="row d-flex custom-row">
+        <div class="col custom-col vl">
+            <h3>Address</h3>
+            <span>
+                WMSU, Normal Road, Baliwasan, Zamboanga City, Philippines
+            </span>
+                <div id="map" style="height: 300px; width: 300px;"></div>
+        </div>
+        <div class="col custom-col vl">
+            <h3>Phone</h3>
+            (062) 991 5087 | (062) 955 8298
+        </div>
+        <div class="col custom-col">
+            <h3>Email</h3>
+            wesmaarrdec@gmail.com
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var map = L.map('map').setView([6.913401 , 122.061515], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([ 6.913401,122.061515 ])
+            .addTo(map)
+            .bindPopup(`<strong>WMSU</strong>`)
+            .openPopup();
+    });
+</script>
+<style>
+    .container h2{
+        color: #43b14b;
+        font-size: 2rem;
+        text-align: center;
+    }
+    .custom-row{
+        padding-bottom: 10vh;
+    }
+    .custom-col{
+        flex-direction: column;
+        display: flex;
+        align-items: center;
+        text-align: center;
+    } 
+    .vl {
+        border-right: 2px solid #43b14b;
+        min-height: 30vh;
+    }
+</style>
+{% endblock %}

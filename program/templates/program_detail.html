@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-6"> 
+    <div class="row">
+        <div class="col URL">
+            <h1>{{ program.title }}</h1>
+            <a href ="{% url 'program' %}"> See All Programs</a>
+        </div>
+    </div>
+    <hr class="custom-hr">
+    <div class="container description">
+        <p>Description: {{ program.prog_description}}</p>
+        <p>DURATION : {{ program.duration }}</p>
+        <p>DATE STARTED : {{ program.start_date }}</p>
+    </div>
+    <div class="container Type">
+    </div>
+</div>
+<style>
+    h1{
+        color: #43b14b;
+        text-align: center;
+        font-size: 4rem;
+    }
+    .custom-hr{
+        border: 1px solid #43b14b;
+    }
+    .URL{
+        text-align: end;
+    }
+    .URL a{
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #66b365;
+        text-decoration: underline;
+        text-decoration-color: currentColor;
+    }
+    .description{
+        font-weight: 500;
+        color: #66b365
+    }
+    .Type{
+        color: black;
+        padding-left: 10%;
+    }
+</style>
+{% endblock %}

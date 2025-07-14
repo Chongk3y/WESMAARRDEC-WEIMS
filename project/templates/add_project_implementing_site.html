@@ -1,0 +1,43 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+   .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Create Project Implementing Site</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_proj_id">Project:</label>
+                        {{ form.proj_id }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_barangay">Barangay:</label>
+                        {{form.barangay }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_city">City:</label>
+                        {{ form.city }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_province">Province:</label>
+                        {{ form.province }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Add Project Implementing Site</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

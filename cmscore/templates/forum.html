@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="fade-in">
+    <section>
+        <div class="subheader" style="background: rgb(211, 240, 211);">
+           <span style="color: #43b14b; font-size: 20px;">
+               <a href="">Categories</a> / 
+               <a href="{% url 'allposts' %}">All Posts</a> / 
+               {% if user.is_authenticated %}
+               <a href="{% url 'myposts' %}">My Posts</a> / 
+                {% endif %}
+               <a href="{%url 'faqs'%}">FAQs</a>
+           </span>
+        </div>
+    </section>
+   <section>
+    <div class="container w-75">
+        <h1 style="color: #43b14b; font-size: 48px; text-align: center; margin: auto;">Community Forum</h1>
+        <hr style="border: 2px solid #43b14b;">
+        <div class="container">
+            {% for categories in category %}
+            <div class="container">
+                <a href="{% url 'posts' cat=categories.slug %}" style="text-transform: capitalize;"> <h3>{{ categories.title }}</h3> </a>
+                <div class="post-container">
+                    <span>
+                        <p>{{ categories.caption }}</p>
+                    </span>
+                    <span class="post-text">
+                    </span>
+                </div>
+                <hr style="border: 1px solid #43b14b;">
+            </div>
+        {% endfor %}
+            <div class="container">
+                <a href="{%url 'program' %}">
+                    <h3>Programs</h3>
+                </a>
+                <div class="post-container">
+                    <span>
+                        <p>Explore programs created by the secretariats of WESMAARRDEC Consortium</p>
+                    </span>
+                </div>
+                <hr style="border: 1px solid #43b14b;">
+            </div>
+        </div>
+        
+       
+    </div>
+   </section>
+</div>
+<style>
+    a{
+        text-decoration: none;
+        color:#43b14b; 
+    }
+    h3{
+        color:#43b14b; 
+    }
+    .post-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .post-text {
+        margin-left: auto; /* Align the "Posts" text to the right end */
+    }
+</style>
+{% endblock %}

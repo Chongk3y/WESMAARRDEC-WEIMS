@@ -1,0 +1,43 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+  .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Fact: {{ fact.question }}</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_question">Question:</label>
+                        {{ form.question }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_answer">Answer:</label>
+                        {{ form.answer }}
+                    </div>
+                    <div class="mb-3">
+                        <labelfor="id_img">Image:</label>
+                        {% if fact.img %}
+                            <p>Current image: <img src="{{ fact.img.url }}" alt="Current image" style="width: 50px; height: 50px;"></p>
+                        {% endif %}
+                        {{ form.img }}
+                        {% if fact.img %}
+                            <input type="checkbox" name="clear_img" id="clear_img"> Clear image
+                        {% endif %}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Fact</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

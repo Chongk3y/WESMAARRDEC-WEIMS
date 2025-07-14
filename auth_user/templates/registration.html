@@ -1,0 +1,91 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+    .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Create User</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        {{ form.username.label_tag }}
+                        {{ form.username }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password1" class="form-label">Password</label>
+                        {{ form.password1 }}
+                        {% for error in form.password1.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password2" class="form-label">Confirm Password</label>
+                        {{ form.password2 }}
+                        {% for error in form.password2.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.first_name.label_tag }}
+                        {{ form.first_name }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.last_name.label_tag }}
+                        {{ form.last_name }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.profile_picture.label_tag }}
+                        {{ form.profile_picture  }}
+                    </div>
+                    <div class="mb-3">
+                        <h6>Choose a User Type:</h6>
+                        <div class="form-check">
+                            {{ form.is_superuser }}
+                            <label class="form-check-label" for="{{ form.is_superuser.id_for_label }}">Super User</label>
+                        </div>
+                        <div class="form-check">
+                            {{ form.researcher }}
+                            <label class="form-check-label" for="{{ form.researcher.id_for_label }}">Researcher</label>
+                        </div>
+                        <div class="form-check">
+                            {{ form.secretariat }}
+                            <label class="form-check-label" for="{{ form.secretariat.id_for_label }}">Secretariat</label>
+                        </div>
+                        <div class="form-check">
+                            {{ form.stakeholder }}
+                            <label class="form-check-label" for="{{ form.stakeholder.id_for_label }}">Stakeholder</label>
+                        </div>
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Sign Up</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

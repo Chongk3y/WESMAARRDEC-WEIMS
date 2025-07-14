@@ -1,0 +1,51 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+   .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Program Budget</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_prog_id">Program:</label>
+                        {{ form.prog_id }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_fund_source">Fund Source:</label>
+                        {{ form.fund_source }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_yr">Year:</label>
+                        {{ form.yr }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_ps">Personal Service:</label>
+                        {{ form.ps }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_mooe">Maintenance and Other Operating Expenses:</label>
+                        {{ form.mooe }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_eo">Equipment Outlay:</label>
+                        {{ form.eo }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Program Budget</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

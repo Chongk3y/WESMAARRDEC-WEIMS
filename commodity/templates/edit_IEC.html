@@ -1,0 +1,67 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+   .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit IEC Material</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_title">Title:</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_iec_type">IEC Type:</label>
+                        {{ form.iec_type }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_commodity">Commodity:</label>
+                        {{ form.commodity }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_target_audience">Target Audience:</label>
+                        {{ form.target_audience }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_designed_by">Designed By:</label>
+                        {{ form.designed_by }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_content_by">Content By:</label>
+                        {{ form.content_by }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_date_published">Date Published:</label>
+                        {{ form.date_published }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_ip">IP:</label>
+                        {{ form.ip }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_iec_file">IEC File:</label>
+                        {{ form.iec_file }}
+                        {% if iec_material.iec_file %}
+                            <br>
+                            <a href="{{ iec_material.iec_file.url }}" target="_blank">Download Current File</a>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update IEC Material</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}
