@@ -299,3 +299,6 @@ def cmi_status_count(request):
     data = {entry['status']: entry['count'] for entry in cmi_counts}
 
     return JsonResponse(data)
+
+def activity_management(request):
+    return render(request, 'activity_management.html')

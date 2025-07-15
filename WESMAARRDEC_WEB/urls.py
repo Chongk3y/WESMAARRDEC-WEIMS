@@ -138,7 +138,8 @@ urlpatterns = [
     path('api/projects-per-year/', projects_per_year_data, name='projects_per_year_data'),
     path('api/cmi-status-count/', cmi_status_count, name='cmi_status_count'),
     path('comment/delete/<int:comment_id>/', delete_comment, name='delete_comment'),
-    path('comment/<int:comment_id>/edit/', edit_comment, name='edit_comment')
+    path('comment/<int:comment_id>/edit/', edit_comment, name='edit_comment'),
+    path('activity-management/', activity_management, name='activity_management')
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
