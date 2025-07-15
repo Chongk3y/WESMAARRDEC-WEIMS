@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'program',
     'project',
     'sub',
+    'wdamms'
 ]
 
 MIDDLEWARE = [

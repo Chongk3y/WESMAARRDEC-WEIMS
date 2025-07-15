@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from auth_user.views import (registration, login, logout_view, accountman, edit_user, delete_user, change_password, reset_password)
 from cmscore.views import *
 from cmsblg.views import (posts, detail, AllPosts, MyPosts, create_post, delete_post, view_posts, add_post, edit_post, delete_post, add_fact,
@@ -139,7 +139,7 @@ urlpatterns = [
     path('api/cmi-status-count/', cmi_status_count, name='cmi_status_count'),
     path('comment/delete/<int:comment_id>/', delete_comment, name='delete_comment'),
     path('comment/<int:comment_id>/edit/', edit_comment, name='edit_comment'),
-    path('activity-management/', activity_management, name='activity_management')
+    path('activity-management/', include('wdamms.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
