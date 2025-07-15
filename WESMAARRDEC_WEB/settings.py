@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-1ye#_r_vkvicg^ig@z3%w&l6w+_1i^a=z7=g0waw-^s0_pjyl2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['reguria.pythonanywhere.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 # Application definition
@@ -98,25 +98,10 @@ WSGI_APPLICATION = 'WESMAARRDEC_WEB.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-     'default': {
-         #mysql localhost
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'reguria$WESMAARDECDB',
-        'USER': 'reguria',
-        'PASSWORD': 'w32m@ARRd3c_pR0j3cT',
-        'HOST': 'reguria.mysql.pythonanywhere-services.com',
-        'PORT': 3306
-      #'OPTIONS': {
-        #"init_command": "SET foreign_key_checks = 0;",
-
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'postgres',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432',
-    #     'USER': 'postgres',
-    #    'PASSWORD': 'postgresuser',
-    #}
-   }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
 
 
@@ -138,6 +123,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -156,13 +142,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-      os.path.join(BASE_DIR, "static"),
+    os.path.join(BASE_DIR, "static"),
 ]
-AUTH_USER_MODEL = 'auth_user.User'
-
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+AUTH_USER_MODEL = 'auth_user.User'
 
 
 # Default primary key field type
