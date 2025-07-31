@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section>
+  <div class="fade-in">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col text-center" style="border: none;">
+          <br>
+          <h2 class="page-title" style="color: #66b365; font-weight: 500;">Consortium Member Institutions</h2>
+          <p style="font-weight: 300;">These institutions are considered organic and/or regular members of the consortium. However, when appropriate, WESMAARRDEC may allow qualified research and development institutions, local government units, non-government organizations and private sectors in the region to become members as approved by the Regional Research and Development Coordinating Committee (RRDCC). The private sectors includes the companies and profit-organizations that may be willing to fund R&D activities.</p>
+          <br>
+        </div>
+      </div>
+
+      <div class="row justify-content-center">
+        {% for cmi in cmilist %}
+        <div class="col-6 col-md-4 col-lg-2 d-flex align-items-center justify-content-center" style="margin: 10px;">
+          <div class="card text-center shadow" style="border: none;">
+            {% if cmi.logo %}
+            <a href="{% url 'cmi' cmi_id=cmi.pk %}">
+              <img loading="lazy" class="card-img-top" src="{{ cmi.logo.url }}" style="object-fit: contain;" alt="Card image cap">
+            </a>
+            {% endif %}
+            <div class="card-body d-flex flex-column align-items-center">
+              <h5 class="card-title" style="color: #66b365; font-weight: 300; font-size: 1rem;">{{ cmi.agency_code }}</h5>
+              <p class="card-text" style="font-weight: 300; font-size: 0.9rem;">{{ cmi.name |truncatechars:40 }}</p>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<style>
+  .card {
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Custom shadow effect */
+    padding: 5px 10px;
+  }
+  .card img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  .card-title {
+    font-size: 1rem;
+    color: #66b365;
+    font-weight: 300;
+  }
+  .card-text {
+    font-size: 0.9rem;
+    font-weight: 300;
+  }
+
+  /* Media Queries */
+  @media only screen and (max-width: 426px) {
+    .col-6 {
+      max-width: 50%;
+    }
+    .card {
+      margin: 0;
+      min-width: 150px !important;
+      min-height: 220px !important;
+    }
+    .card img {
+      width: 130px !important;
+      height: 130px !important;
+    }
+    .card-text {
+      display: none;
+    }
+  }
+
+  @media only screen and (max-width: 769px) {
+    .col-md-4 {
+      max-width: 33.33%;
+    }
+    .card img {
+      object-fit: contain;
+      width: 188px;
+      height: 188px;
+    }
+    .card {
+      min-width: 180px;
+      min-height: 291px;
+    }
+  }
+
+  @media only screen and (min-width: 1080px) {
+    .col-lg-2 {
+      max-width: 20%;
+    }
+    .card img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      min-width: 205px;
+      min-height: 205px;
+      max-width: 205px;
+      max-height: 205px;
+    }
+    .card {
+      margin: 0;
+      min-width: 225px;
+      min-height: 325px;
+      padding: 10px;
+    }
+  }
+</style>
+{% endblock %}

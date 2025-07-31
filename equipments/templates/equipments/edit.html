@@ -1,0 +1,277 @@
+{% extends 'equipments/base.html' %}
+{% block title %}Edit Equipment{% endblock %}
+{% load static %}
+{% block content %}
+
+<div class="container py-3">
+  <div class="card shadow-sm border-0 mx-auto" style="max-width: 920px;">
+    <div class="card-header text-white" style="background-color: #0e4a39;">
+      <h5 class="mb-0">Edit Equipment</h5>
+    </div>
+
+    <div class="card-body p-4">
+      <form action="" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+
+          <!-- 🖼 Image & Property -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pb-1">Equipment Image & Info</div>
+          <div class="col-md-6">
+            <label class="form-label small">Equipment Image</label>
+            <input type="file" class="form-control form-control-sm" name="user_image" id="user_image">
+            {% if equipment.user_image %}
+            <img src="{{ equipment.user_image.url }}" alt="Current Image" style="max-width:100px; margin-top:10px;">
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Property Number</label>
+            <input type="text" class="form-control form-control-sm" name="item_propertynum" value="{{ equipment.item_propertynum }}">
+          </div>
+
+          <!-- 📄 Details -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Details</div>
+          <div class="col-md-6">
+            <label class="form-label small">Item Name</label>
+            <input type="text" class="form-control form-control-sm" name="item_name" value="{{ equipment.item_name }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Item Description</label>
+            <input type="text" class="form-control form-control-sm" name="item_desc" value="{{ equipment.item_desc }}">
+          </div>
+
+          <!-- 🧾 Purchase -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Purchase Information</div>
+          <div class="col-md-6">
+            <label class="form-label small">Purchase Date</label>
+            <input type="date" name="item_purdate" class="form-control form-control-sm" value="{{ equipment.item_purdate|date:'Y-m-d' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">PO Number</label>
+            <input type="text" class="form-control form-control-sm" name="po_number" value="{{ equipment.po_number }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Fund Source</label>
+            <input type="text" class="form-control form-control-sm" name="fund_source" value="{{ equipment.fund_source }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Supplier</label>
+            <input type="text" class="form-control form-control-sm" name="supplier" value="{{ equipment.supplier }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Amount</label>
+            <input type="number" step="0.01" class="form-control form-control-sm" name="item_amount" value="{{ equipment.item_amount }}">
+          </div>
+
+          <!-- 🧑‍💼 Assignment -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Assignment & Location</div>
+          <div class="col-md-6">
+            <label class="form-label small">Assigned To</label>
+            <input type="text" class="form-control form-control-sm" name="assigned_to" value="{{ equipment.assigned_to }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">End User</label>
+            <input type="text" class="form-control form-control-sm" name="end_user" value="{{ equipment.end_user }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Location</label>
+            <input type="text" class="form-control form-control-sm" name="location" value="{{ equipment.location }}">
+          </div>
+
+          <!-- 📁 Classification -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Classification</div>
+          <div class="col-md-6">
+            <label class="form-label small">Employee</label>
+            <select class="form-select form-select-sm" name="emp_id">
+              {% for user in users %}
+              <option value="{{ user.id }}" {% if equipment.emp_id == user.id %}selected{% endif %}>{{ user.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Category</label>
+            <select class="form-select form-select-sm" name="category_id">
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if equipment.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Status</label>
+            <select class="form-select form-select-sm" name="status_id" id="statusSelect">
+              {% for stat in statuses %}
+              <option value="{{ stat.id }}" data-status-name="{{ stat.name }}" {% if equipment.status_id == stat.id %}selected{% endif %}>{{ stat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- 🔧 Damage Reason (conditional field) -->
+          <div class="col-12" id="damageReasonSection" style="display: none;">
+            <label class="form-label small">Damage Reason</label>
+            <textarea class="form-control form-control-sm" name="damage_reason" rows="3" placeholder="Please describe the reason for damage...">{{ equipment.damage_reason }}</textarea>
+          </div>
+
+          <!-- 🔍 Lost Status Fields (conditional fields) -->
+          <div id="lostSection" style="display: none;">
+            <div class="col-12">
+              <label class="form-label small">Lost Remarks</label>
+              <textarea class="form-control form-control-sm" name="lost_remarks" rows="3" placeholder="Please describe the circumstances of loss...">{{ equipment.lost_remarks }}</textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Replacement Documents</label>
+              <input type="file" class="form-control form-control-sm" name="replacement_documents" id="replacementDocuments" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tiff">
+              <div class="form-text">Upload replacement documents (multiple files allowed). Supported formats: PDF, Images</div>
+              <div id="selectedReplacementFiles" class="mt-2" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <small class="text-muted fw-medium">Selected files:</small>
+                  <button type="button" class="btn btn-sm btn-outline-secondary clear-all-replacement-files" title="Clear all files">
+                    <i class="bi bi-trash3"></i> Clear All
+                  </button>
+                </div>
+                <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                  <ul id="replacementFileList" class="list-unstyled mb-0"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ Buttons -->
+          <div class="col-12 text-end pt-3">
+            <a href="{% url 'equipments:index' %}" class="btn btn-sm btn-outline-secondary px-4">Cancel</a>
+            <button type="submit" class="btn btn-sm btn-custom px-4 me-2">Save Changes</button>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const statusSelect = document.getElementById('statusSelect');
+  const damageReasonSection = document.getElementById('damageReasonSection');
+  const damageReasonTextarea = document.querySelector('textarea[name="damage_reason"]');
+  const lostSection = document.getElementById('lostSection');
+  const lostRemarksTextarea = document.querySelector('textarea[name="lost_remarks"]');
+  const replacementDocsInput = document.getElementById('replacementDocuments');
+
+  // Function to update replacement file list display
+  function updateReplacementFileList() {
+    if (!replacementDocsInput) return;
+    
+    const files = replacementDocsInput.files;
+    const fileList = document.getElementById('replacementFileList');
+    const selectedFilesDiv = document.getElementById('selectedReplacementFiles');
+    
+    if (files.length > 0) {
+      fileList.innerHTML = '';
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileSize = (file.size / 1024 / 1024).toFixed(2); // Convert to MB
+        const listItem = document.createElement('li');
+        listItem.className = 'd-flex justify-content-between align-items-center py-2 border-bottom';
+        listItem.setAttribute('data-file-index', i);
+        listItem.innerHTML = `
+          <div class="d-flex align-items-center">
+            <i class="bi bi-file-earmark me-2 text-primary"></i>
+            <div>
+              <div class="fw-medium text-dark">${file.name}</div>
+              <small class="text-muted">${fileSize} MB</small>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-danger remove-replacement-file-btn" data-file-index="${i}" title="Remove file">
+            <i class="bi bi-x"></i>
+          </button>
+        `;
+        fileList.appendChild(listItem);
+      }
+      selectedFilesDiv.style.display = 'block';
+    } else {
+      selectedFilesDiv.style.display = 'none';
+    }
+  }
+
+  function toggleConditionalFields() {
+    const selectedOption = statusSelect.options[statusSelect.selectedIndex];
+    const statusName = selectedOption.getAttribute('data-status-name');
+    
+    // Handle Damaged status
+    if (statusName === 'Damaged') {
+      damageReasonSection.style.display = 'block';
+      damageReasonTextarea.required = true;
+    } else {
+      damageReasonSection.style.display = 'none';
+      damageReasonTextarea.required = false;
+      // Clear the damage reason if switching away from damaged status
+      if (statusName !== 'Damaged') {
+        damageReasonTextarea.value = '';
+      }
+    }
+    
+    // Handle Lost status
+    if (statusName === 'Lost') {
+      lostSection.style.display = 'block';
+      lostRemarksTextarea.required = true;
+    } else {
+      lostSection.style.display = 'none';
+      lostRemarksTextarea.required = false;
+      // Clear the lost remarks and files if switching away from lost status
+      if (statusName !== 'Lost') {
+        lostRemarksTextarea.value = '';
+        // Clear replacement documents
+        if (replacementDocsInput) {
+          replacementDocsInput.value = '';
+          updateReplacementFileList();
+        }
+      }
+    }
+  }
+
+  // Check initial status on page load
+  toggleConditionalFields();
+
+  // Listen for status changes
+  statusSelect.addEventListener('change', toggleConditionalFields);
+
+  // Replacement Documents File Management
+  if (replacementDocsInput) {
+    replacementDocsInput.addEventListener('change', function() {
+      updateReplacementFileList();
+    });
+  }
+
+  // Handle replacement file removal
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-replacement-file-btn')) {
+      const fileIndex = parseInt(e.target.closest('.remove-replacement-file-btn').dataset.fileIndex);
+      const input = replacementDocsInput;
+      const dt = new DataTransfer();
+      
+      // Add all files except the one to be removed to DataTransfer object
+      for (let i = 0; i < input.files.length; i++) {
+        if (i !== fileIndex) {
+          dt.items.add(input.files[i]);
+        }
+      }
+      
+      // Update the input files
+      input.files = dt.files;
+      
+      // Update the display
+      updateReplacementFileList();
+    }
+  });
+
+  // Handle clear all replacement files
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.clear-all-replacement-files')) {
+      if (replacementDocsInput) {
+        replacementDocsInput.value = ''; // Clear the input
+        updateReplacementFileList(); // Update the display
+      }
+    }
+  });
+});
+</script>
+
+{% endblock %}

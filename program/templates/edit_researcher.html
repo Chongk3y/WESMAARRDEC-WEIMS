@@ -1,0 +1,87 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+   .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+   .img-thumbnail {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin-bottom: 10px;
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Researcher</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_fname">First Name:</label>
+                        {{ form.fname }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_lname">Last Name:</label>
+                        {{ form.lname }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_mname">Middle Name:</label>
+                        {{ form.mname }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_cmi">CMI:</label>
+                        {{ form.cmi }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_address">Address:</label>
+                        {{ form.address }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_email">Email:</label>
+                        {{ form.email }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_contact_no">Contact Number:</label>
+                        {{ form.contact_no }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_dob">Date of Birth:</label>
+                        {{ form.dob }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_sex">Sex:</label>
+                        {{ form.sex }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_specialization">Specialization:</label>
+                        {{ form.specialization }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_photo">Photo:</label>
+                        {% if researcher.photo %}
+                            <img src="{{ researcher.photo.url }}" class="img-thumbnail" alt="Current Photo">
+                            <br>
+                            <input type="checkbox" name="clear_photo" id="clear_photo"> Clear Photo
+                        {% endif %}
+                        {{ form.photo }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_pds_file">PDS File:</label>
+                        {{ form.pds_file }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Researcher</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

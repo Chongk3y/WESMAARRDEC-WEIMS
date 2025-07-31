@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5">
+    <div class="container">
+        <h1 style="color: #43b14b; font-size: 3rem;">Create a New Post</h1>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-custom">Submit</button>
+        </form>
+    </div>
+</div>
+<style>
+    .btn-custom{
+        margin-bottom: 5vh;
+        background-color: #43b14b;
+        border-radius: 25px;
+        color:white;
+        font-size: 1.3rem;
+    }
+    .btn-custom:hover{
+    background-color: #66b365;
+    color:white;
+   }
+   .btn-custom:active{
+    background-color: #43b14b;
+    color:#66b365;
+   }
+</style>
+{%endblock%}

@@ -1,0 +1,174 @@
+{% extends 'equipments/base.html' %}
+{% load humanize %}
+{% block content %}
+<div class="container-fluid px-3 px-md-4 py-3">
+
+  <!-- Filter & Export Form -->
+  <form method="get" class="row g-3 align-items-end mb-4">
+    <div class="col-md-3">
+      <label for="fromDate" class="form-label">From</label>
+      <input type="date" id="fromDate" name="fromDate" class="form-control" value="{{ date_from }}">
+    </div>
+    <div class="col-md-3">
+      <label for="toDate" class="form-label">To</label>
+      <input type="date" id="toDate" name="toDate" class="form-control" value="{{ date_to }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Period</label>
+      <select name="period" class="form-select">
+        <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+        <option value="yearly" {% if period == 'yearly' %}selected{% endif %}>Yearly</option>
+      </select>
+    </div>
+    <div class="col-md-3 text-end">
+      <button type="submit" class="btn btn-outline-primary me-2">Apply</button>
+      <button type="submit" name="export" value="csv" class="btn btn-primary">Export CSV</button>
+    </div>
+  </form>
+
+  <!-- Combined Asset Summary -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-semibold">Assets by Category</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Category</th>
+              <th class="text-end">Count</th>
+              <th class="text-end">Total Value (₱)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in asset_by_category %}
+            <tr>
+              <td>{{ row.category__name }}</td>
+              <td class="text-end">
+                {% for cnt in asset_count_by_category %}
+                  {% if cnt.category__name == row.category__name %}
+                    {{ cnt.count }}
+                  {% endif %}
+                {% endfor %}
+              </td>
+              <td class="text-end">{{ row.total|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">No data available.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Purchases Overview -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">Purchases Overview ({{ period|capfirst }})</span>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Period</th>
+              <th class="text-end">Count</th>
+              <th class="text-end">Total Value (₱)</th>
+            </tr>
+          </thead>
+           <tbody>
+          {% if period == 'monthly' %}
+            {% for row in monthly_purchases %}
+            <tr>
+              <td>{{ row.period|date:"F Y" }}</td>
+              <td class="text-end">{{ row.count }}</td>
+              <td class="text-end">{{ row.total|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">No monthly data.</td></tr>
+            {% endfor %}
+          {% else %}
+            {% for row in yearly_purchases %}
+            <tr>
+              <td>{{ row.period }}</td>
+              <td class="text-end">{{ row.count }}</td>
+              <td class="text-end">{{ row.total|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">No yearly data.</td></tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recently Added Assets -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-semibold">Recently Added Assets</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Property #</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Supplier</th>
+              <th class="text-end">Amount (₱)</th>
+              <th>Purchase Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for eq in recent_assets %}
+            <tr>
+              <td>{{ eq.item_propertynum }}</td>
+              <td>{{ eq.item_name }}</td>
+              <td>{{ eq.category.name }}</td>
+              <td>{{ eq.supplier|default:'(None)' }}</td>
+              <td class="text-end">{{ eq.item_amount|floatformat:2|intcomma }}</td>
+              <td>{{ eq.item_purdate|date:'Y-m-d' }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center">No recent assets.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assets by Location & Status -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-semibold">Assets by Location &amp; Status</div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Location</th>
+              <th>Status</th>
+              <th class="text-end">Asset Count</th>
+              <th class="text-end">Total Value (₱)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in assets_by_location_status %}
+            <tr>
+              <td>{{ row.location|default:'(None)' }}</td>
+              <td>{{ row.status__name|default:'(None)' }}</td>
+              <td class="text-end">{{ row.count }}</td>
+              <td class="text-end">{{ row.total|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center">No data available.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

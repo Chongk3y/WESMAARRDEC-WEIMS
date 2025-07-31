@@ -1,0 +1,114 @@
+<!-- cmscore/templates/cmscore/cmi_detail.html -->
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="mb-4">
+        <a href="{% url 'cmi' %}" style="color: #43b14b; text-decoration: none;">
+            <h4>Back to CMI List</h4>
+        </a>
+        <hr class="custom-hr">
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 text-center">
+                <div id="map" style="height: 500px;"></div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-start">
+                    <a href ="{{cmi_instance.url}}"><img src="{{ cmi_instance.logo.url }}" class="img-fluid mb-3 mr-3" alt="{{ cmi_instance.name }}" style="max-width: 150px;"></a>
+                    <div>
+                        <h1 style="padding-left: 10px;">{{ cmi_instance.name }}</h1>
+                        <h5 class="post-meta" style="padding-left: 10px;">{{ cmi_instance.agency_code }}</h5>
+                    </div>
+                </div>
+                <p>{{ cmi_instance.detail}}</p>
+                <ul class="list-unstyled">
+                    <li><strong>Address: </strong>{{ cmi_instance.address }}</li>
+                    <li><strong>Consortium: </strong>{{ cmi_instance.consortium_id }}</li>
+                    <li><strong>Telephone: </strong>{{ cmi_instance.telno }}</li>
+                    <li><strong>Contact: </strong>{{ cmi_instance.contact_no }}</li>
+                    <li><strong>Email: </strong>{{ cmi_instance.email }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <hr class="custom-hr">
+    <div class="row"style="overflow-y: auto;">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Commodities</h5>
+                    {% for commodity in related_commodities %}
+                    <p class="card-text"><a href ="{% url 'commodetail' commodity.com_id %}">{{ commodity.name }}</a></p>
+                    <hr class="custom-hr">
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Projects</h5>
+                    {% for projects in related_projects %}
+                    <p class="card-text"><a href ="{% url 'project_detail' projects.proj_id %}">{{ projects.title}}</a></p>
+                    <hr class="custom-hr">
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Programs</h5>
+                    {% for programs in related_programs %}
+                    <p class="card-text"><a href ="{% url 'program_details' programs.prog_id %}">{{ programs.title}}</a></p>
+                    <hr class="custom-hr">
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var map = L.map('map').setView([ "{{ cmi_instance.geolat }}", "{{ cmi_instance.geolong }}" ], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([ "{{ cmi_instance.geolat }}", "{{ cmi_instance.geolong }}" ])
+            .addTo(map)
+            .bindPopup(`<strong>{{ cmi_instance.name }}</strong><br>{{ cmi_instance.description }}`)
+            .openPopup();
+    });
+</script>
+<style>
+    h1 {
+        color: #43b14b;
+    }
+    h5 {
+        color: #66b365;
+        font-size: 20px;
+    }
+    .card-text{
+        text-align: center;
+    }
+    .card-text a{
+        color: #43b14b;
+        font-size: 1.2rem;
+    }
+    .custom-hr {
+        border-color: rgb(102, 179, 101);
+        border-width: 3px;
+    }
+    .card-title {
+        text-align: center;
+        font-weight: bold;
+        background-color: #43b14b;
+        color: white;
+        padding: 10px;
+    }
+</style>
+{% endblock %}

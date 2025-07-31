@@ -1,0 +1,79 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+    .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Stakeholder: {{ stakeholder.fname }} {{ stakeholder.lname }}</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_fname">First Name:</label>
+                        {{ form.fname }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_lname">Last Name:</label>
+                        {{ form.lname }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_mname">Middle Name:</label>
+                        {{ form.mname }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_consortium_id">Consortium ID:</label>
+                        {{ form.consortium_id }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_commodity">Commodity:</label>
+                        {{ form.commodity }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_sex">Sex:</label>
+                        {{ form.sex }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_dob">Date of Birth:</label>
+                        {{ form.dob }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_barangay">Barangay:</label>
+                        {{ form.barangay }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_city">City:</label>
+                        {{ form.city }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_province">Province:</label>
+                        {{ form.province }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_zipcode">Zipcode:</label>
+                        {{ form.zipcode }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_email_add">Email Address:</label>
+                        {{ form.email_add }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_contact_no">Contact Number:</label>
+                        {{ form.contact_no }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Stakeholder</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

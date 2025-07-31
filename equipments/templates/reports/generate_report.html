@@ -1,0 +1,1179 @@
+{% extends 'equipments/base.html' %}
+{% load report_extras %}
+{% block title %}{% endblock %}
+{% block content %}
+{% load static %}
+{% load humanize %}
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+<style>
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .printable-report, .printable-report * {
+    visibility: visible !important;
+  }
+  .printable-report {
+    position: absolute;
+    left: 0; top: 0; width: 100%;
+    background: white !important;
+    z-index: 9999;
+    padding: 0;
+    margin: 0;
+  }
+  .no-print, .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  a, a:visited, a:link, a:active {
+    text-decoration: none !important;
+    color: black !important;
+  }
+  a[href]:after, a[href^="http"]:after, a[href^="/"]:after,
+  a[href]::after, a[href^="http"]::after, a[href^="/"]::after {
+    content: none !important;
+    display: none !important;
+  }
+  /* Compact table for print */
+  .printable-report .table,
+  .printable-report .table th,
+  .printable-report .table td {
+    font-size: 10px !important;
+    padding: 1px 3px !important;
+    border-width: 1px !important;
+  }
+  .printable-report .table th,
+  .printable-report .table td {
+    vertical-align: middle !important;
+  }
+  /* Ensure images are small in print */
+  .printable-report img {
+    max-width: 30px !important;
+    max-height: 30px !important;
+  }
+  /* Break tables across pages if needed */
+  .printable-report table {
+    page-break-inside: auto;
+  }
+  .printable-report tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  .printable-report th {
+    page-break-after: avoid;
+  }
+}
+.print-header {
+  display: none;
+}
+
+
+</style>
+<div class="container-fluid px-2 px-md-4 py-3">
+  <h2 class="fw-semibold mb-4"><i class="bi bi-file-earmark-bar-graph"></i> Generate Equipment Report</h2>
+
+  <!-- Advanced Filter and Column Selection Card -->
+  {% if not request.GET.print_all %}
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" id="advanced-filter-form">
+        <!-- Persist selected columns as hidden inputs -->
+        {% for col in selected_columns %}
+          {% if col not in default_columns %}
+            <input type="hidden" name="columns" value="{{ col }}">
+          {% endif %}
+        {% endfor %}
+        
+        <!-- Persist current page when applying new filters -->
+        {% if request.GET.page %}
+          <input type="hidden" name="page" value="{{ request.GET.page }}" id="page-input">
+        {% endif %}
+        
+        <!-- Persist per_page setting -->
+        {% if request.GET.per_page %}
+          <input type="hidden" name="per_page" value="{{ request.GET.per_page }}" id="per-page-input">
+        {% endif %}
+        <div id="advanced-filter-rows">
+          {% if filter_rows %}
+            {% for row in filter_rows %}
+              <div class="row g-2 align-items-end mb-2 advanced-filter-row">
+                <div class="col-12 col-md-3">
+                  <label class="form-label form-label-sm mb-1">Column</label>
+                  <select name="filter_column[]" class="form-select form-select-sm filter-column-select">
+                    {% for group, choices in form.fields.columns.choices %}
+                      <optgroup label="{{ group }}">
+                      {% for value, label in choices %}
+                        <option value="{{ value }}" {% if value == row.column %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                      </optgroup>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-12 col-md-2">
+                  <label class="form-label form-label-sm mb-1">Operator</label>
+                  <select name="filter_operator[]" class="form-select form-select-sm">
+                    <option value="exact" {% if row.operator == 'exact' %}selected{% endif %}>Equals</option>
+                    <option value="icontains" {% if row.operator == 'icontains' %}selected{% endif %}>Contains</option>
+                    <option value="gt" {% if row.operator == 'gt' %}selected{% endif %}>&gt;</option>
+                    <option value="lt" {% if row.operator == 'lt' %}selected{% endif %}>&lt;</option>
+                    <option value="gte" {% if row.operator == 'gte' %}selected{% endif %}>&ge;</option>
+                    <option value="lte" {% if row.operator == 'lte' %}selected{% endif %}>&le;</option>
+                    <option value="isnull" {% if row.operator == 'isnull' %}selected{% endif %}>Is Empty</option>
+                    <option value="notnull" {% if row.operator == 'notnull' %}selected{% endif %}>Is Not Empty</option>
+                  </select>
+                </div>
+                <div class="col-12 col-md-4">
+                  <label class="form-label form-label-sm mb-1">Value</label>
+                  <input type="text" name="filter_value[]" class="form-control form-control-sm filter-value-input" value="{{ row.value|default:'' }}" {% if row.column in 'category status end_user assigned_to project_name location current_location fund_source supplier return_condition return_type returned_by received_by emp created_by updated_by archived_by is_returned is_archived item_purdate created_at updated_at date_archived' %}style="display:none;"{% endif %} />
+                  
+                  <!-- Existing dropdowns -->
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-category" {% if row.column != 'category' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for cat in categories %}
+                      <option value="{{ cat.pk }}" {% if row.value|stringformat:'s' == cat.pk|stringformat:'s' %}selected{% endif %}>{{ cat.name }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-status" {% if row.column != 'status' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for stat in statuses %}
+                      <option value="{{ stat.pk }}" {% if row.value|stringformat:'s' == stat.pk|stringformat:'s' %}selected{% endif %}>{{ stat.name }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-enduser" {% if row.column != 'end_user' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for eu in end_users %}
+                      <option value="{{ eu }}" {% if row.value|stringformat:'s' == eu|stringformat:'s' %}selected{% endif %}>{{ eu }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-assignedto" {% if row.column != 'assigned_to' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for at in assigned_to_list %}
+                      <option value="{{ at }}" {% if row.value|stringformat:'s' == at|stringformat:'s' %}selected{% endif %}>{{ at }}</option>
+                    {% endfor %}
+                  </select>
+                  
+                  <!-- New dropdowns for additional fields -->
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-project" {% if row.column != 'project_name' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for pn in project_names %}
+                      <option value="{{ pn }}" {% if row.value|stringformat:'s' == pn|stringformat:'s' %}selected{% endif %}>{{ pn }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-location" {% if row.column != 'location' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for loc in locations %}
+                      <option value="{{ loc }}" {% if row.value|stringformat:'s' == loc|stringformat:'s' %}selected{% endif %}>{{ loc }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-currentlocation" {% if row.column != 'current_location' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for cl in current_locations %}
+                      <option value="{{ cl }}" {% if row.value|stringformat:'s' == cl|stringformat:'s' %}selected{% endif %}>{{ cl }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-fundsource" {% if row.column != 'fund_source' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for fs in fund_sources %}
+                      <option value="{{ fs }}" {% if row.value|stringformat:'s' == fs|stringformat:'s' %}selected{% endif %}>{{ fs }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-supplier" {% if row.column != 'supplier' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for sup in suppliers %}
+                      <option value="{{ sup }}" {% if row.value|stringformat:'s' == sup|stringformat:'s' %}selected{% endif %}>{{ sup }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-returncondition" {% if row.column != 'return_condition' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for rc in return_conditions %}
+                      <option value="{{ rc }}" {% if row.value|stringformat:'s' == rc|stringformat:'s' %}selected{% endif %}>{{ rc }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-returntype" {% if row.column != 'return_type' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for rt in return_types %}
+                      <option value="{{ rt }}" {% if row.value|stringformat:'s' == rt|stringformat:'s' %}selected{% endif %}>{{ rt }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-returnedby" {% if row.column != 'returned_by' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for rb in returned_by_list %}
+                      <option value="{{ rb }}" {% if row.value|stringformat:'s' == rb|stringformat:'s' %}selected{% endif %}>{{ rb }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-receivedby" {% if row.column != 'received_by' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for recb in received_by_list %}
+                      <option value="{{ recb }}" {% if row.value|stringformat:'s' == recb|stringformat:'s' %}selected{% endif %}>{{ recb }}</option>
+                    {% endfor %}
+                  </select>
+                  
+                  <!-- User-related dropdowns -->
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-emp" {% if row.column != 'emp' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for emp in employees %}
+                      <option value="{{ emp.pk }}" {% if row.value|stringformat:'s' == emp.pk|stringformat:'s' %}selected{% endif %}>{{ emp.username }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-createdby" {% if row.column != 'created_by' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for cb in created_by_users %}
+                      <option value="{{ cb.pk }}" {% if row.value|stringformat:'s' == cb.pk|stringformat:'s' %}selected{% endif %}>{{ cb.username }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-updatedby" {% if row.column != 'updated_by' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for ub in updated_by_users %}
+                      <option value="{{ ub.pk }}" {% if row.value|stringformat:'s' == ub.pk|stringformat:'s' %}selected{% endif %}>{{ ub.username }}</option>
+                    {% endfor %}
+                  </select>
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-archivedby" {% if row.column != 'archived_by' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    {% for ab in archived_by_users %}
+                      <option value="{{ ab.pk }}" {% if row.value|stringformat:'s' == ab.pk|stringformat:'s' %}selected{% endif %}>{{ ab.username }}</option>
+                    {% endfor %}
+                  </select>
+                  
+                  <!-- Boolean dropdowns -->
+                  <select name="filter_value[]" class="form-select form-select-sm filter-value-select-boolean" {% if row.column not in 'is_returned is_archived' %}style="display:none;"{% endif %}>
+                    <option value="">---------</option>
+                    <option value="true" {% if row.value|stringformat:'s' == 'true' %}selected{% endif %}>Yes</option>
+                    <option value="false" {% if row.value|stringformat:'s' == 'false' %}selected{% endif %}>No</option>
+                  </select>
+                  
+                  <input type="date" name="filter_value[]" class="form-control form-control-sm filter-value-date" value="{{ row.value|default:'' }}" {% if row.column not in 'item_purdate created_at updated_at date_archived' %}style="display:none;"{% endif %} />
+                </div>
+                <div class="col-12 col-md-2 d-flex align-items-center gap-1 mt-2 mt-md-0">
+                  <button type="button" class="btn btn-outline-danger btn-sm remove-filter-row" title="Remove filter row"><i class="bi bi-dash-circle"></i></button>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="row g-2 align-items-end mb-2 advanced-filter-row">
+              <div class="col-12 col-md-3">
+                <label class="form-label form-label-sm mb-1">Column</label>
+                <select name="filter_column[]" class="form-select form-select-sm filter-column-select">
+                  {% for group, choices in form.fields.columns.choices %}
+                    <optgroup label="{{ group }}">
+                    {% for value, label in choices %}
+                      <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                    </optgroup>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-12 col-md-2">
+                <label class="form-label form-label-sm mb-1">Operator</label>
+                <select name="filter_operator[]" class="form-select form-select-sm">
+                  <option value="exact">Equals</option>
+                  <option value="icontains">Contains</option>
+                  <option value="gt">&gt;</option>
+                  <option value="lt">&lt;</option>
+                  <option value="gte">&ge;</option>
+                  <option value="lte">&le;</option>
+                  <option value="isnull">Is Empty</option>
+                  <option value="notnull">Is Not Empty</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4">
+                <label class="form-label form-label-sm mb-1">Value</label>
+                <input type="text" name="filter_value[]" class="form-control form-control-sm filter-value-input" />
+                
+                <!-- Existing dropdowns -->
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-category" style="display:none;">
+                  <option value="">---------</option>
+                  {% for cat in categories %}
+                    <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-status" style="display:none;">
+                  <option value="">---------</option>
+                  {% for stat in statuses %}
+                    <option value="{{ stat.pk }}">{{ stat.name }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-enduser" style="display:none;">
+                  <option value="">---------</option>
+                  {% for eu in end_users %}
+                    <option value="{{ eu }}">{{ eu }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-assignedto" style="display:none;">
+                  <option value="">---------</option>
+                  {% for at in assigned_to_list %}
+                    <option value="{{ at }}">{{ at }}</option>
+                  {% endfor %}
+                </select>
+                
+                <!-- New dropdowns for additional fields -->
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-project" style="display:none;">
+                  <option value="">---------</option>
+                  {% for pn in project_names %}
+                    <option value="{{ pn }}">{{ pn }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-location" style="display:none;">
+                  <option value="">---------</option>
+                  {% for loc in locations %}
+                    <option value="{{ loc }}">{{ loc }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-currentlocation" style="display:none;">
+                  <option value="">---------</option>
+                  {% for cl in current_locations %}
+                    <option value="{{ cl }}">{{ cl }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-fundsource" style="display:none;">
+                  <option value="">---------</option>
+                  {% for fs in fund_sources %}
+                    <option value="{{ fs }}">{{ fs }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-supplier" style="display:none;">
+                  <option value="">---------</option>
+                  {% for sup in suppliers %}
+                    <option value="{{ sup }}">{{ sup }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-returncondition" style="display:none;">
+                  <option value="">---------</option>
+                  {% for rc in return_conditions %}
+                    <option value="{{ rc }}">{{ rc }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-returntype" style="display:none;">
+                  <option value="">---------</option>
+                  {% for rt in return_types %}
+                    <option value="{{ rt }}">{{ rt }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-returnedby" style="display:none;">
+                  <option value="">---------</option>
+                  {% for rb in returned_by_list %}
+                    <option value="{{ rb }}">{{ rb }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-receivedby" style="display:none;">
+                  <option value="">---------</option>
+                  {% for recb in received_by_list %}
+                    <option value="{{ recb }}">{{ recb }}</option>
+                  {% endfor %}
+                </select>
+                
+                <!-- User-related dropdowns -->
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-emp" style="display:none;">
+                  <option value="">---------</option>
+                  {% for emp in employees %}
+                    <option value="{{ emp.pk }}">{{ emp.username }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-createdby" style="display:none;">
+                  <option value="">---------</option>
+                  {% for cb in created_by_users %}
+                    <option value="{{ cb.pk }}">{{ cb.username }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-updatedby" style="display:none;">
+                  <option value="">---------</option>
+                  {% for ub in updated_by_users %}
+                    <option value="{{ ub.pk }}">{{ ub.username }}</option>
+                  {% endfor %}
+                </select>
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-archivedby" style="display:none;">
+                  <option value="">---------</option>
+                  {% for ab in archived_by_users %}
+                    <option value="{{ ab.pk }}">{{ ab.username }}</option>
+                  {% endfor %}
+                </select>
+                
+                <!-- Boolean dropdowns -->
+                <select name="filter_value[]" class="form-select form-select-sm filter-value-select-boolean" style="display:none;">
+                  <option value="">---------</option>
+                  <option value="true">Yes</option>
+                  <option value="false">No</option>
+                </select>
+                
+                <input type="date" name="filter_value[]" class="form-control form-control-sm filter-value-date" style="display:none;" />
+              </div>
+              <div class="col-12 col-md-2 d-flex align-items-center gap-1 mt-2 mt-md-0">
+                <button type="button" class="btn btn-outline-danger btn-sm remove-filter-row" title="Remove filter row"><i class="bi bi-dash-circle"></i></button>
+              </div>
+            </div>
+          {% endif %}
+          <!-- Hidden template row for JS cloning -->
+          <div class="row g-2 align-items-end mb-2 advanced-filter-row template" style="display:none;">
+            <div class="col-12 col-md-3">
+              <label class="form-label form-label-sm mb-1">Column</label>
+              <select class="form-select form-select-sm filter-column-select">
+                {% for group, choices in form.fields.columns.choices %}
+                  <optgroup label="{{ group }}">
+                  {% for value, label in choices %}
+                    <option value="{{ value }}">{{ label }}</option>
+                  {% endfor %}
+                  </optgroup>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-2">
+              <label class="form-label form-label-sm mb-1">Operator</label>
+              <select name="filter_operator[]" class="form-select form-select-sm">
+                <option value="exact">Equals</option>
+                <option value="icontains">Contains</option>
+                <option value="gt">&gt;</option>
+                <option value="lt">&lt;</option>
+                <option value="gte">&ge;</option>
+                <option value="lte">&le;</option>
+                <option value="isnull">Is Empty</option>
+                <option value="notnull">Is Not Empty</option>
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label form-label-sm mb-1">Value</label>
+              <input type="text" class="form-control form-control-sm filter-value-input" />
+              
+              <!-- Existing dropdowns -->
+              <select class="form-select form-select-sm filter-value-select-category" style="display:none;">
+                <option value="">---------</option>
+                {% for cat in categories %}
+                  <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-status" style="display:none;">
+                <option value="">---------</option>
+                {% for stat in statuses %}
+                  <option value="{{ stat.pk }}">{{ stat.name }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-enduser" style="display:none;">
+                <option value="">---------</option>
+                {% for eu in end_users %}
+                  <option value="{{ eu }}">{{ eu }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-assignedto" style="display:none;">
+                <option value="">---------</option>
+                {% for at in assigned_to_list %}
+                  <option value="{{ at }}">{{ at }}</option>
+                {% endfor %}
+              </select>
+              
+              <!-- New dropdowns for additional fields -->
+              <select class="form-select form-select-sm filter-value-select-project" style="display:none;">
+                <option value="">---------</option>
+                {% for pn in project_names %}
+                  <option value="{{ pn }}">{{ pn }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-location" style="display:none;">
+                <option value="">---------</option>
+                {% for loc in locations %}
+                  <option value="{{ loc }}">{{ loc }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-currentlocation" style="display:none;">
+                <option value="">---------</option>
+                {% for cl in current_locations %}
+                  <option value="{{ cl }}">{{ cl }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-fundsource" style="display:none;">
+                <option value="">---------</option>
+                {% for fs in fund_sources %}
+                  <option value="{{ fs }}">{{ fs }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-supplier" style="display:none;">
+                <option value="">---------</option>
+                {% for sup in suppliers %}
+                  <option value="{{ sup }}">{{ sup }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-returncondition" style="display:none;">
+                <option value="">---------</option>
+                {% for rc in return_conditions %}
+                  <option value="{{ rc }}">{{ rc }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-returntype" style="display:none;">
+                <option value="">---------</option>
+                {% for rt in return_types %}
+                  <option value="{{ rt }}">{{ rt }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-returnedby" style="display:none;">
+                <option value="">---------</option>
+                {% for rb in returned_by_list %}
+                  <option value="{{ rb }}">{{ rb }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-receivedby" style="display:none;">
+                <option value="">---------</option>
+                {% for recb in received_by_list %}
+                  <option value="{{ recb }}">{{ recb }}</option>
+                {% endfor %}
+              </select>
+              
+              <!-- User-related dropdowns -->
+              <select class="form-select form-select-sm filter-value-select-emp" style="display:none;">
+                <option value="">---------</option>
+                {% for emp in employees %}
+                  <option value="{{ emp.pk }}">{{ emp.username }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-createdby" style="display:none;">
+                <option value="">---------</option>
+                {% for cb in created_by_users %}
+                  <option value="{{ cb.pk }}">{{ cb.username }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-updatedby" style="display:none;">
+                <option value="">---------</option>
+                {% for ub in updated_by_users %}
+                  <option value="{{ ub.pk }}">{{ ub.username }}</option>
+                {% endfor %}
+              </select>
+              <select class="form-select form-select-sm filter-value-select-archivedby" style="display:none;">
+                <option value="">---------</option>
+                {% for ab in archived_by_users %}
+                  <option value="{{ ab.pk }}">{{ ab.username }}</option>
+                {% endfor %}
+              </select>
+              
+              <!-- Boolean dropdowns -->
+              <select class="form-select form-select-sm filter-value-select-boolean" style="display:none;">
+                <option value="">---------</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+              
+              <input type="date" class="form-control form-control-sm filter-value-date" style="display:none;" />
+            </div>
+            <div class="col-12 col-md-2 d-flex align-items-center gap-1 mt-2 mt-md-0">
+              <button type="button" class="btn btn-outline-danger btn-sm remove-filter-row" title="Remove filter row"><i class="bi bi-dash-circle"></i></button>
+            </div>
+          </div>
+        </div>
+        <!-- No hidden columns, always use default columns -->
+        <div class="row mb-2">
+          <div class="col-12 col-md-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm w-100" id="add-filter-row"><i class="bi bi-plus-circle"></i> Add Filter</button>
+          </div>
+          <div class="col-12 col-md-10 d-flex align-items-center gap-1 mt-2 mt-md-0 justify-content-end">
+            <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-1" style="min-width:120px" data-bs-toggle="modal" data-bs-target="#columnModal">
+              <i class="bi bi-layout-three-columns"></i> Columns
+            </button>
+            <button type="submit" class="btn btn-primary btn-sm flex-fill py-1" style="min-width:120px"><i class="bi bi-funnel"></i> Generate</button>
+          </div>
+        </div>
+      </form>
+      <script>
+        // Advanced filter row add/remove logic
+        document.addEventListener('DOMContentLoaded', function() {
+          const filterRows = document.getElementById('advanced-filter-rows');
+          const addBtn = document.getElementById('add-filter-row');
+
+          function updateValueField(row) {
+            const colSelect = row.querySelector('.filter-column-select');
+            const valueInput = row.querySelector('.filter-value-input');
+            const valueSelectCategory = row.querySelector('.filter-value-select-category');
+            const valueSelectStatus = row.querySelector('.filter-value-select-status');
+            const valueSelectEndUser = row.querySelector('.filter-value-select-enduser');
+            const valueSelectAssignedTo = row.querySelector('.filter-value-select-assignedto');
+            const valueSelectProject = row.querySelector('.filter-value-select-project');
+            const valueSelectLocation = row.querySelector('.filter-value-select-location');
+            const valueSelectCurrentLocation = row.querySelector('.filter-value-select-currentlocation');
+            const valueSelectFundSource = row.querySelector('.filter-value-select-fundsource');
+            const valueSelectSupplier = row.querySelector('.filter-value-select-supplier');
+            const valueSelectReturnCondition = row.querySelector('.filter-value-select-returncondition');
+            const valueSelectReturnType = row.querySelector('.filter-value-select-returntype');
+            const valueSelectReturnedBy = row.querySelector('.filter-value-select-returnedby');
+            const valueSelectReceivedBy = row.querySelector('.filter-value-select-receivedby');
+            const valueSelectEmp = row.querySelector('.filter-value-select-emp');
+            const valueSelectCreatedBy = row.querySelector('.filter-value-select-createdby');
+            const valueSelectUpdatedBy = row.querySelector('.filter-value-select-updatedby');
+            const valueSelectArchivedBy = row.querySelector('.filter-value-select-archivedby');
+            const valueSelectBoolean = row.querySelector('.filter-value-select-boolean');
+            const valueDate = row.querySelector('.filter-value-date');
+            
+            if (!colSelect) return;
+            
+            // Hide all value fields and clear their names
+            const allFields = [
+              valueInput, valueSelectCategory, valueSelectStatus, valueSelectEndUser, valueSelectAssignedTo,
+              valueSelectProject, valueSelectLocation, valueSelectCurrentLocation, valueSelectFundSource,
+              valueSelectSupplier, valueSelectReturnCondition, valueSelectReturnType, valueSelectReturnedBy,
+              valueSelectReceivedBy, valueSelectEmp, valueSelectCreatedBy, valueSelectUpdatedBy,
+              valueSelectArchivedBy, valueSelectBoolean, valueDate
+            ];
+            
+            allFields.forEach(field => {
+              if (field) {
+                field.style.display = 'none';
+                field.name = '';
+              }
+            });
+            
+            // Show the correct value field based on selected column
+            const selectedColumn = colSelect.value;
+            let activeField = null;
+            
+            switch (selectedColumn) {
+              case 'category':
+                activeField = valueSelectCategory;
+                break;
+              case 'status':
+                activeField = valueSelectStatus;
+                break;
+              case 'end_user':
+                activeField = valueSelectEndUser;
+                break;
+              case 'assigned_to':
+                activeField = valueSelectAssignedTo;
+                break;
+              case 'project_name':
+                activeField = valueSelectProject;
+                break;
+              case 'location':
+                activeField = valueSelectLocation;
+                break;
+              case 'current_location':
+                activeField = valueSelectCurrentLocation;
+                break;
+              case 'fund_source':
+                activeField = valueSelectFundSource;
+                break;
+              case 'supplier':
+                activeField = valueSelectSupplier;
+                break;
+              case 'return_condition':
+                activeField = valueSelectReturnCondition;
+                break;
+              case 'return_type':
+                activeField = valueSelectReturnType;
+                break;
+              case 'returned_by':
+                activeField = valueSelectReturnedBy;
+                break;
+              case 'received_by':
+                activeField = valueSelectReceivedBy;
+                break;
+              case 'emp':
+                activeField = valueSelectEmp;
+                break;
+              case 'created_by':
+                activeField = valueSelectCreatedBy;
+                break;
+              case 'updated_by':
+                activeField = valueSelectUpdatedBy;
+                break;
+              case 'archived_by':
+                activeField = valueSelectArchivedBy;
+                break;
+              case 'is_returned':
+              case 'is_archived':
+                activeField = valueSelectBoolean;
+                break;
+              case 'item_purdate':
+              case 'created_at':
+              case 'updated_at':
+              case 'date_archived':
+                activeField = valueDate;
+                break;
+              default:
+                activeField = valueInput;
+                break;
+            }
+            
+            // Show and activate the selected field
+            if (activeField) {
+              activeField.style.display = '';
+              activeField.name = 'filter_value[]';
+            }
+          }
+
+          function addRow() {
+            const template = filterRows.querySelector('.advanced-filter-row.template');
+            const newRow = template.cloneNode(true);
+            newRow.classList.remove('template');
+            newRow.style.display = '';
+            // Add name attributes to inputs/selects
+            newRow.querySelectorAll('select').forEach((el) => {
+              if (el.classList.contains('filter-column-select')) {
+                el.name = 'filter_column[]';
+              } else if (el.classList.contains('filter-value-select-category') || 
+                         el.classList.contains('filter-value-select-status') || 
+                         el.classList.contains('filter-value-select-enduser') || 
+                         el.classList.contains('filter-value-select-assignedto') ||
+                         el.classList.contains('filter-value-select-project') ||
+                         el.classList.contains('filter-value-select-location') ||
+                         el.classList.contains('filter-value-select-currentlocation') ||
+                         el.classList.contains('filter-value-select-fundsource') ||
+                         el.classList.contains('filter-value-select-supplier') ||
+                         el.classList.contains('filter-value-select-returncondition') ||
+                         el.classList.contains('filter-value-select-returntype') ||
+                         el.classList.contains('filter-value-select-returnedby') ||
+                         el.classList.contains('filter-value-select-receivedby') ||
+                         el.classList.contains('filter-value-select-emp') ||
+                         el.classList.contains('filter-value-select-createdby') ||
+                         el.classList.contains('filter-value-select-updatedby') ||
+                         el.classList.contains('filter-value-select-archivedby') ||
+                         el.classList.contains('filter-value-select-boolean')) {
+                el.name = '';
+              } else {
+                el.name = 'filter_operator[]';
+              }
+            });
+            if (newRow.querySelector('.filter-value-input')) newRow.querySelector('.filter-value-input').name = 'filter_value[]';
+            if (newRow.querySelector('.filter-value-date')) newRow.querySelector('.filter-value-date').name = '';
+            // Set up value field
+            updateValueField(newRow);
+            // Listen for column change
+            newRow.querySelector('.filter-column-select').addEventListener('change', function() {
+              updateValueField(newRow);
+            });
+            filterRows.appendChild(newRow);
+            updateRemoveButtons();
+          }
+
+          function removeRow(e) {
+            if (filterRows.querySelectorAll('.advanced-filter-row:not(.template)').length > 1) {
+              e.target.closest('.advanced-filter-row').remove();
+            }
+            updateRemoveButtons();
+          }
+
+          function updateRemoveButtons() {
+            filterRows.querySelectorAll('.remove-filter-row').forEach(btn => {
+              btn.disabled = filterRows.querySelectorAll('.advanced-filter-row:not(.template)').length === 1;
+            });
+          }
+
+          // Attach change event and update value field for all existing rows (not just template)
+          filterRows.querySelectorAll('.advanced-filter-row:not(.template)').forEach(row => {
+            const colSelect = row.querySelector('.filter-column-select');
+            if (colSelect) {
+              colSelect.addEventListener('change', function() {
+                updateValueField(row);
+              });
+              updateValueField(row);
+            }
+          });
+
+          addBtn.addEventListener('click', addRow);
+          filterRows.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-filter-row')) {
+              removeRow(e);
+            }
+          });
+          updateRemoveButtons();
+        });
+      </script>
+      <small class="text-muted">Add multiple filter conditions as needed. Filters on different columns are combined with AND. Multiple filters on the same column are combined with OR.</small>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Modal for column selection -->
+  {% if not request.GET.print_all %}
+  <div class="modal fade" id="columnModal" tabindex="-1" aria-labelledby="columnModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="columnModalLabel">Select Columns to Display</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form method="get" onsubmit="return false;">
+        <div class="modal-body">
+          {% for group, choices in form.fields.columns.choices %}
+            <strong>{{ group }}</strong>
+            <div class="row mb-2">
+              {% for value, label in choices %}
+                <div class="col-6">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="columns" value="{{ value }}" id="col_{{ value }}"
+                      {% if value in selected_columns %}checked{% endif %}>
+                    <label class="form-check-label" for="col_{{ value }}">{{ label }}</label>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endfor %}
+          <small class="text-muted">Default columns are always shown and cannot be removed.</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm w-25" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary btn-sm w-25" id="apply-columns-btn">Apply</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+
+
+  <script>
+    // Column selection modal: Apply button logic
+    document.addEventListener('DOMContentLoaded', function() {
+      const applyBtn = document.getElementById('apply-columns-btn');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', function() {
+          // Get all checked column checkboxes (including disabled)
+          const modal = document.getElementById('columnModal');
+          const checked = modal.querySelectorAll('input[name="columns"]:checked');
+          // Remove all existing hidden column inputs from the main form
+          const mainForm = document.getElementById('advanced-filter-form');
+          // Only remove hidden column inputs, not filter fields
+          mainForm.querySelectorAll('input[type="hidden"][name="columns"]').forEach(e => e.remove());
+          // Add hidden inputs for each checked column
+          checked.forEach(cb => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'columns';
+            input.value = cb.value;
+            mainForm.appendChild(input);
+          });
+          // Don't reset page for column changes - keep current page
+          // Submit the main form (all filter fields and values are preserved)
+          mainForm.submit();
+        });
+      }
+    });
+  </script>
+
+  <script>
+  // Function to change items per page
+  function changePerPage(value) {
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('per_page', value);
+    urlParams.set('page', '1'); // Reset to first page when changing per_page
+    window.location.search = urlParams.toString();
+  }
+  
+  // Keep hidden column inputs in sync with modal checkboxes before any form submit
+  function syncColumnInputs() {
+    const modal = document.getElementById('columnModal');
+    const checked = modal.querySelectorAll('input[name="columns"]:checked');
+    const mainForm = document.getElementById('advanced-filter-form');
+    // Remove all existing hidden column inputs
+    mainForm.querySelectorAll('input[type="hidden"][name="columns"]').forEach(e => e.remove());
+    // Add hidden inputs for each checked column
+    checked.forEach(cb => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'columns';
+      input.value = cb.value;
+      mainForm.appendChild(input);
+    });
+  }
+  
+  // Reset page to 1 when applying new filters
+  function resetPageOnFilter() {
+    const pageInput = document.getElementById('page-input');
+    if (pageInput) {
+      pageInput.value = '1';
+    } else {
+      // Create hidden page input if it doesn't exist
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'page';
+      input.value = '1';
+      input.id = 'page-input';
+      document.getElementById('advanced-filter-form').appendChild(input);
+    }
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    // Attach to form submit (reset page when applying filters)
+    const mainForm = document.getElementById('advanced-filter-form');
+    if (mainForm) {
+      mainForm.addEventListener('submit', function(e) {
+        resetPageOnFilter(); // Reset to page 1 when applying new filters
+        syncColumnInputs();
+      });
+    }
+    // Also update on Apply in modal (for instant feedback, but keep current page for column changes)
+    const applyBtn = document.getElementById('apply-columns-btn');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', function() {
+        // Don't reset page for column changes, just sync columns and submit
+        syncColumnInputs();
+        mainForm.submit();
+      });
+    }
+  });
+  </script>
+
+  
+<!-- Report Results Section -->
+<div class="card shadow-sm printable-report">
+  <div class="card-body">
+
+    <!-- Print Header -->
+    <div class="print-header text-center border-bottom pb-3 mb-4">
+      <div class="d-flex align-items-start justify-content-end">
+        <div class="text-end me-3">
+          <small><strong>Date:</strong>{% now "F d, Y - h:i A" %}</small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center justify-content-center">
+        <img src="{% static 'image/logo2.png' %}" alt="WESMAARRDEC Logo" style="height: 60px;">
+        <h4 class="fw-bold" style="letter-spacing: 2px;">WESMAARRDEC</h4>
+      </div>
+
+      <p class="mb-0" style="font-size: 18px;">Equipment Inventory Management System</p>
+      <h4 class="mt-2 mb-0">Generated Report</h4>
+    </div>
+
+    {% if equipments.object_list %}
+      {% if not request.GET.print_all %}
+        <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+          <h5 class="mb-0">Report Results ({{ page_obj.paginator.count }} total)</h5>
+          <div class="d-flex align-items-center gap-3">
+            <!-- Export Options -->
+            <div class="btn-group" role="group" aria-label="Export options">
+              <button type="button" class="btn btn-outline-success btn-sm" onclick="exportReport('csv')">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Excel (CSV)
+              </button>
+              <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#wordExportModal">
+                <i class="bi bi-file-earmark-word"></i> Word
+              </button>
+            </div>
+            <!-- Per page selector -->
+            <div class="d-flex align-items-center">
+              <small class="text-muted me-2">Show:</small>
+              <select class="form-select form-select-sm" style="width: auto;" onchange="changePerPage(this.value)">
+                <option value="10" {% if request.GET.per_page == '10' %}selected{% endif %}>10</option>
+                <option value="25" {% if request.GET.per_page == '25' or not request.GET.per_page %}selected{% endif %}>25</option>
+                <option value="50" {% if request.GET.per_page == '50' %}selected{% endif %}>50</option>
+                <option value="100" {% if request.GET.per_page == '100' %}selected{% endif %}>100</option>
+              </select>
+              <small class="text-muted ms-2">per page</small>
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <!-- Print All Header -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Report Results - All {{ page_obj.paginator.count }} records</h5>
+        </div>
+      {% endif %}
+
+      {% if selected_columns %}
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm align-middle">
+            <thead class="table-light">
+              <tr>
+                {% for col in selected_columns %}
+                  <th class="text-center">{{ column_labels|get_item:col }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>
+              {% for eq in equipments %}
+                <tr>
+                  {% for col in selected_columns %}
+                    <td>
+                      {% if col == 'category' %}{{ eq.category }}
+                      {% elif col == 'status' %}{{ eq.status }}
+                      {% elif col == 'created_at' %}{{ eq.created_at|date:'Y-m-d' }}
+                      {% elif col == 'updated_at' %}{{ eq.updated_at|date:'Y-m-d' }}
+                      {% elif col == 'item_amount' %}{{ eq.item_amount|floatformat:2|intcomma }}
+                      {% elif col == 'user_image' %}
+                        <img src="{{ eq.user_image.url }}" alt="Image" style="max-width:50px;max-height:50px;">
+                      {% else %}
+                        {{ eq|getattribute:col }}
+                      {% endif %}
+                    </td>
+                  {% endfor %}
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        {% if page_obj.has_other_pages and not request.GET.print_all %}
+          <nav aria-label="Report pagination" class="no-print">
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+              {% if page_obj.has_previous %}
+                <li class="page-item">
+                  <a class="page-link" href="?{% url_replace request 'page' 1 %}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?{% url_replace request 'page' page_obj.previous_page_number %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                  </a>
+                </li>
+              {% endif %}
+
+              {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                  <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                  </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                  <li class="page-item">
+                    <a class="page-link" href="?{% url_replace request 'page' num %}">{{ num }}</a>
+                  </li>
+                {% endif %}
+              {% endfor %}
+
+              {% if page_obj.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="?{% url_replace request 'page' page_obj.next_page_number %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                  </a>
+                </li>
+                <li class="page-item">
+                  <a class="page-link" href="?{% url_replace request 'page' page_obj.paginator.num_pages %}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                  </a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+
+          <!-- Page info -->
+          <div class="text-center mt-2 no-print">
+            <small class="text-muted">
+              Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
+              (Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }})
+            </small>
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="text-muted">Please select at least one column to display the report.</p>
+      {% endif %}
+    {% elif page_obj.paginator.count == 0 %}
+      <p class="text-muted">No results found with the current filters.</p>
+    {% else %}
+      <p class="text-muted">No results found.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Word Export Modal -->
+<div class="modal fade" id="wordExportModal" tabindex="-1" aria-labelledby="wordExportModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="wordExportModalLabel">
+          <i class="bi bi-file-earmark-word me-2"></i>Export to Word Document
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="wordExportForm">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="wordOrientation" class="form-label">Page Orientation</label>
+              <select class="form-select" id="wordOrientation" name="orientation">
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="wordFontSize" class="form-label">Font Size</label>
+              <select class="form-select" id="wordFontSize" name="font_size">
+                <option value="8">8pt</option>
+                <option value="9">9pt</option>
+                <option value="10" selected>10pt</option>
+                <option value="11">11pt</option>
+                <option value="12">12pt</option>
+              </select>
+            </div>
+          </div>
+          <!-- Hidden input to always use grid table style -->
+          <input type="hidden" name="table_style" value="table_grid">
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="wordIncludeImages" name="include_images">
+            <label class="form-check-label" for="wordIncludeImages">
+              Include equipment images (may increase file size)
+            </label>
+          </div>
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            This will export the current page results ({{ page_obj|length }} items) using your organization's Word template.
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="executeWordExport()">
+          <i class="bi bi-download me-2"></i>Download Word Document
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+// Export functionality
+function exportReport(format) {
+  if (format === 'csv') {
+    // Direct CSV export
+    executeExport('csv', {});
+  }
+  // For Word and PDF, the modal will handle the export
+}
+
+function executeWordExport() {
+  const form = document.getElementById('wordExportForm');
+  const formData = new FormData(form);
+  
+  const options = {
+    orientation: formData.get('orientation') || 'portrait',
+    font_size: formData.get('font_size') || '10',
+    table_style: formData.get('table_style') || 'table_grid',
+    include_images: formData.has('include_images') ? '1' : '0'
+  };
+  
+  executeExport('word', options);
+  
+  // Close modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('wordExportModal'));
+  modal.hide();
+}
+
+function executeExport(format, options = {}) {
+  // Get current URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  
+  // Add export format
+  urlParams.set('export', format);
+  
+  // Add export options
+  Object.keys(options).forEach(key => {
+    urlParams.set(key, options[key]);
+  });
+  
+  // Create download URL
+  const exportUrl = window.location.pathname + '?' + urlParams.toString();
+  
+  // Trigger download
+  const link = document.createElement('a');
+  link.href = exportUrl;
+  link.download = `Equipment_Report_${new Date().toISOString().split('T')[0]}.${format}`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+</script>
+
+</div>
+{% endblock %}

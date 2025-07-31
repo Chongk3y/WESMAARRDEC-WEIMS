@@ -1,0 +1,154 @@
+{% extends 'cmibase.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5">
+    <h1 style="text-align: center; font-weight: 600; color: #008001;">Commodity List</h1>
+    <hr>
+    <div class="container d-flex" style="justify-content: end; padding: 0;">
+        <div class="col-lg-10" style="display: flex; justify-content: end;">
+            <form method="get" action="{% url 'view_commodity' %}" class="mb-3 w-100 formhead">
+                <div class="input-group gx-2 gy-2 row">
+                    <div class="col-12 col-md">
+                        <select name="agency" class="form-control">
+                            <option value="">All Agencies</option>
+                            {% for agency in agencies %}
+                                <option value="{{ agency.name }}" {% if request.GET.agency == agency.name %}selected{% endif %}>{{ agency.agency_code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-md searchcontainer">
+                        <input type="text" name="q" class="form-control search" placeholder="Search..." value="{{ request.GET.q }}">
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <button type="submit" class="btn btn-success w-100">Search</button>
+                    </div>
+                    <div class="col-12 col-md-auto">
+                        <a href="{%url 'add_commodity'%}" class="btn btn-success w-100">Add Commodity</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Detail</th>
+                    <th>Implementing Agency</th>
+                    <th style="text-align: end;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for commodity in page_obj %}
+                <tr>
+                    <td>{{ commodity.name}}</td>
+                    <td>{{ commodity.detail |truncatechars:20}}</td>
+                    <td>{{ commodity.cmi_name}}</td>
+                    <td style="text-align: end;">
+                        <a href="{%url 'edit_commodity' commodity.com_id %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-pen-to-square"></i></a>
+                        <a href="{%url 'delete_commodity' commodity.com_id %}" class="btn btn-primary btn-sm"><i class="fa-solid fa-trash"></i></a>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#Commodity{{ commodity.com_id }}"><i class="fa-regular fa-eye"></i></button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="Commodity{{ commodity.com_id }}" tabindex="-1" aria-labelledby="Commodity" aria-hidden="true" style="text-align: left;">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="Commodity">Commodity Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Title: {{ commodity.name}}</p>
+                                        <p>Description: {{ commodity.detail |truncatechars:50}}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="pagination-wrapper mt-4">
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                </li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endfor %}
+{% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+<style>
+  .btn-sm{
+        background-color: #43b14b;
+        border-color: #43b14b;
+    }
+  .btn-sm:hover{
+        background-color: #008001;
+        border-color: #008001;
+    }
+  .btn-sm:active{
+        background-color: #43b14b;
+        border-color: #43b14b;
+    }
+  .btn-sm:focus-visible{
+        background-color: #43b14b;
+        border-color: #43b14b;
+    }
+  .btn-success{
+        background-color: #43b14b;
+        border-color: #43b14b;
+    }
+  .btn-success:hover{
+        background-color: #008001;
+        border-color: #008001;
+    }
+  .btn-success:active{
+        background-color: #008001;
+        border-color: #008001;
+    }
+    .pagination .page-link {
+            background-color: #66b365;
+            border-color: #66b365;
+    }
+  .pagination .page-item .active .page-link {
+        background-color: #66b365; /* Change the background color of active pagination link to #66b365 */
+        border-color: #66b365; /* Change the border color of active pagination link to #66b365 */
+        color: white; /* Change the text color of active pagination link to white */
+    }
+    @media only screen and (max-width: 426px){
+        .btn-sm{
+            margin: 10px;
+        }
+        .formhead
+        {
+            display: flex;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

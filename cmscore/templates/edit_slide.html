@@ -1,0 +1,43 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+  .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Slide: {{ slide.name }}</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_name">Name:</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_detail">Detail:</label>
+                        {{ form.detail }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_image">Image:</label>
+                        {% if slide.image %}
+                            <p>Current image: <img src="{{ slide.image.url }}" alt="Current image" style="width: 50px; height: 50px;"></p>
+                        {% endif %}
+                        {{ form.image }}
+                        {% if slide.image %}
+                            <input type="checkbox" name="clear_image" id="clear_image"> Clear image
+                        {% endif %}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Slide</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

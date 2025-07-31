@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="fade-in">
+    <section>
+        <div class="subheader" style="background: rgb(211, 240, 211);">
+           <span style="color: #43b14b; font-size: 20px;">
+               <a href="">Categories</a> / 
+               {% if user.is_authenticated %}
+                   <a href="">My Posts</a> / 
+               {% endif %}
+               <a href="">My Posts</a> 
+           </span>
+        </div>
+    </section>
+    <section>
+      <h1 style="color: #43b14b; font-size: 60px; text-align: center; margin: auto;">Frequently Asked Questions</h1>
+  
+      <div class="accordion" id="faqAccordion">
+          {% for faq in faqs %}
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ faq.pk }}">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ faq.pk }}" aria-expanded="true" aria-controls="collapse{{ faq.pk }}">
+                {{ faq.question }}
+              </button>
+            </h2>
+            <div id="collapse{{ faq.pk }}" class="accordion-collapse collapse" aria-labelledby="heading{{ faq.pk }}" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                {{ faq.answer }}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+      </div> 
+  </section>
+</div>
+
+
+
+<style>
+     a{
+        text-decoration: none;
+        color:#43b14b; 
+    }
+
+    .accordion {
+      width: 75%;
+      margin: 0 auto;
+      padding-top: 10vh;
+      padding-bottom: 10vh;    
+    }
+    .accordion-button {
+      color: #000; /* Change default color to black */
+      background-color: #fff; /* Change default background color to white */
+      border: 1px solid #e9ecef;
+    }
+    .accordion-button:focus {
+      outline: none;
+      box-shadow: none;
+    }
+    .accordion-item {
+      border-bottom: 1px solid #e9ecef; /* Add border bottom for each item */
+    }
+    .accordion-item:last-child {
+      border-bottom: none; /* Remove border bottom for the last item */
+    }
+    .accordion-button:not(.collapsed) {
+      background-color: #f0f0f0; /* Change background color when expanded */
+    }
+    .accordion-body{
+      border: 1px solid #e9ecef;
+    }
+</style>
+{% endblock %}

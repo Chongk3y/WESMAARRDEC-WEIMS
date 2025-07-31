@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="fade-in">
+    <br>
+    <section>
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h1 style="color: #43b14b;">On-Going Projects</h1>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url 'onproject' %}" style="font-size: 14px; color: #66b365; font-weight: bold; text-decoration: underline; text-decoration-color: #66b365;">
+                        SEE ALL ON-GOING PROJECTS
+                    </a>
+                </div>
+            </div>
+            <!-- ON GOING PROJECTS -->
+            {% for project in onggoing %}
+            <div class="row">
+                <hr style="border: 2px solid #66b365;">
+                <div class="col">
+                    <p style="color: #66b365; font-weight: 500;">DATE STARTED : {{ project.end_date }}</p>
+                    <a href="{% url 'project_detail' project.proj_id %}">
+                        <h3 style="color: #000000;">{{ project.title }}</h3>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+             <!--END OF ONGOING-->
+            <div class="row">
+                <div class="col">
+                </div>
+            </div>
+        </div>
+    </section>
+    <br>
+    <section>
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h1 style="color: #43b14b;">Completed Projects</h1>
+                </div>
+                <div class="col-auto">
+                    <a href="{% url 'finproject' %}" style="font-size: 14px; color: #66b365; font-weight: bold; text-decoration: underline; text-decoration-color: #66b365;">SEE ALL COMPLETED PROJECTS</a>
+                </div>
+            </div>
+            <!-- COMPLETED PROJECTS -->
+            {% for project in completed %}
+            <div class="row">
+                <hr style="border: 2px solid #66b365;">
+                <div class="col">
+                    <p style="color: #66b365; font-weight: 500;">DATE ENDED : {{ project.end_date }}</p>
+                    <a href="{% url 'project_detail' project.proj_id %}">
+                        <h3 style="color: #000000;">{{ project.title }}</h3>
+
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+             <!--END OF COMPLETED-->
+            <hr style="border: 2px solid #66b365;">
+            <div class="row">
+                <div class="col">
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<style>
+    a {
+        text-decoration: none;
+    }
+</style>
+{% endblock %}

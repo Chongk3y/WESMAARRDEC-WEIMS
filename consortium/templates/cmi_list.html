@@ -1,0 +1,22 @@
+<ul class="cmi-list">
+    {% for cmi in cmi_list %}
+        <li class="cmi-list-items"><a href="{% url 'cmi' cmi_id=cmi.pk %}">{{ cmi.agency_code }}</a></li>
+    {% endfor %}
+</ul>
+
+<style>
+    .cmi-list {
+        list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 10fr); /* adjust the number of columns to your liking */
+    grid-gap: 5px; /* adjust the gap to your liking */
+}
+@media only screen and (max-width: 426px){
+        .cmi-list {
+            grid-template-columns: repeat(2, 15fr);
+            font-size: 0.7rem;
+        }
+    }
+</style>

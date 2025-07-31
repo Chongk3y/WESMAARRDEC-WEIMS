@@ -1,0 +1,101 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+   .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit CMI</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <ul>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        {{ form.agency_code.label_tag }}
+                        {{ form.agency_code }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.name.label_tag }}
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.is_cmi.label_tag }}
+                        {{ form.is_cmi }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.consortium_id.label_tag }}
+                        {{ form.consortium_id }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.address.label_tag }}
+                        {{ form.address }}
+                    </div>
+                   <div class="mb-3">
+                        <label for="id_geolat">Latitude:</label>
+                        {{ form.geolat }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_geolong">Longitude:</label>
+                        {{ form.geolong }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.logo.label_tag }}
+                        {{ form.logo }}
+                        {% if form.instance.logo %}
+                            <img src="{{ form.instance.logo.url }}" alt="Current Logo" style="width: 100px; height: 100px;">
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.detail.label_tag }}
+                        {{ form.detail }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.contact_no.label_tag }}
+                        {{ form.contact_no }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.telno.label_tag }}
+                        {{ form.telno }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.email.label_tag }}
+                        {{ form.email }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.url.label_tag }}
+                        {{ form.url }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.status.label_tag }}
+                        {{ form.status }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.remarks.label_tag }}
+                        {{ form.remarks }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}

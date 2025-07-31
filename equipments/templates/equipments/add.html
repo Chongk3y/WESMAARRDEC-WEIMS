@@ -1,0 +1,436 @@
+{% extends 'equipments/base.html' %}
+{% block title %}Add Equipment{% endblock %}
+{% load static %}
+{% block content %}
+
+{% if error %}
+<div class="alert alert-danger small py-2 px-3 my-2">{{ error }}</div>
+{% endif %}
+
+<div class="container py-3">
+  <div class="card shadow-sm border-0 mx-auto" style="max-width: 920px;">
+    <div class="card-header text-white py-2" style="background-color: #0e4a39;">
+    <h5 class="mb-0">Add New Equipment</h5>
+    </div>
+    <div class="card-body p-4">
+      <form action="{% url 'equipments:processaddequipment' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+
+          <!-- 🛠 Equipment Details -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pb-1">Equipment Details</div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Image</label>
+            <input type="file" class="form-control form-control-sm" name="user_image">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Property #</label>
+            <input type="text" name="item_propertynum" class="form-control form-control-sm" value="{{ values.item_propertynum|default_if_none:'' }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Item Name</label>
+            <input type="text" name="item_name" class="form-control form-control-sm" value="{{ values.item_name|default_if_none:'' }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Description</label>
+            <input type="text" name="item_desc" class="form-control form-control-sm" value="{{ values.item_desc|default_if_none:'' }}">
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label small">Additional Info</label>
+            <input type="text" name="additional_info" class="form-control form-control-sm" value="{{ values.additional_info|default_if_none:'' }}">
+          </div>
+
+          <!-- 🧾 Purchase Details -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Purchase Details</div>
+
+          <div class="col-md-6">
+            <label class="form-label small">PO #</label>
+            <input type="text" name="po_number" class="form-control form-control-sm" value="{{ values.po_number|default_if_none:'' }}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Fund Source</label>
+            <input type="text" name="fund_source" class="form-control form-control-sm" value="{{ values.fund_source|default_if_none:'' }}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Supplier</label>
+            <input type="text" name="supplier" class="form-control form-control-sm" value="{{ values.supplier|default_if_none:'' }}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Amount (₱)</label>
+            <input type="number" step="0.01" name="item_amount" class="form-control form-control-sm {% if errors.item_amount %}is-invalid{% endif %}" value="{{ values.item_amount|default_if_none:'' }}">
+            {% if errors.item_amount %}
+            <div class="invalid-feedback d-block">{{ errors.item_amount }}</div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Purchase Date</label>
+            <input type="date" name="item_purdate" class="form-control form-control-sm" value="{{ values.item_purdate|default_if_none:'' }}">
+          </div>
+
+          <div class="col-md-6">
+            <label for="orderReceipt" class="form-label small">Order Receipt (optional)</label>
+            <input type="file" class="form-control form-control-sm" id="orderReceipt" name="order_receipt" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+          </div>
+
+          <!-- 📍 Project & Assignment -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Project & Assignment</div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Project Name</label>
+            <select name="project_name_select" id="projectNameSelect" class="form-select form-select-sm mb-2" onchange="toggleProjectNameInput()">
+              <option value="">Select project name</option>
+              {% for project in existing_project_names %}
+              <option value="{{ project }}" {% if values.project_name == project %}selected{% endif %}>{{ project }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="project_name" id="projectNameCustom" class="form-control form-control-sm" value="{% if values.project_name and values.project_name not in existing_project_names %}{{ values.project_name }}{% endif %}" placeholder="Type new project name" style="display: {% if values.project_name and values.project_name not in existing_project_names %}block{% else %}none{% endif %};">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Assigned To</label>
+            <select name="assigned_to_select" id="assignedToSelect" class="form-select form-select-sm mb-2" onchange="toggleAssignedToInput()">
+              <option value="">Select assigned to</option>
+              {% for person in existing_assigned_to %}
+              <option value="{{ person }}" {% if values.assigned_to == person %}selected{% endif %}>{{ person }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="assigned_to" id="assignedToCustom" class="form-control form-control-sm" value="{% if values.assigned_to and values.assigned_to not in existing_assigned_to %}{{ values.assigned_to }}{% endif %}" placeholder="Type new person name" style="display: {% if values.assigned_to and values.assigned_to not in existing_assigned_to %}block{% else %}none{% endif %};">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">End User</label>
+            <select name="end_user_select" id="endUserSelect" class="form-select form-select-sm mb-2" onchange="toggleEndUserInput()">
+              <option value="">Select end user</option>
+              {% for user in existing_end_users %}
+              <option value="{{ user }}" {% if values.end_user == user %}selected{% endif %}>{{ user }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="end_user" id="endUserCustom" class="form-control form-control-sm" value="{% if values.end_user and values.end_user not in existing_end_users %}{{ values.end_user }}{% endif %}" placeholder="Type new end user name" style="display: {% if values.end_user and values.end_user not in existing_end_users %}block{% else %}none{% endif %};">
+            
+            <script>
+            // Toggle functions for each combo box
+            function toggleProjectNameInput() {
+              toggleComboInput('projectNameSelect', 'projectNameCustom', 'project_name');
+            }
+            
+            function toggleAssignedToInput() {
+              toggleComboInput('assignedToSelect', 'assignedToCustom', 'assigned_to');
+            }
+            
+            function toggleEndUserInput() {
+              toggleComboInput('endUserSelect', 'endUserCustom', 'end_user');
+            }
+            
+            function toggleLocationInput() {
+              toggleComboInput('locationSelect', 'locationCustom', 'location');
+            }
+            
+            function toggleCurrentLocationInput() {
+              toggleComboInput('currentLocationSelect', 'currentLocationCustom', 'current_location');
+            }
+            
+            // Generic toggle function
+            function toggleComboInput(selectId, inputId, fieldName) {
+              const select = document.getElementById(selectId);
+              const customInput = document.getElementById(inputId);
+              
+              if (select.value === 'other') {
+                customInput.style.display = 'block';
+                customInput.name = fieldName;
+                customInput.focus();
+              } else {
+                customInput.style.display = 'none';
+                customInput.name = '';
+                if (select.value) {
+                  // Create a hidden input to send the selected value
+                  const hiddenInput = document.createElement('input');
+                  hiddenInput.type = 'hidden';
+                  hiddenInput.name = fieldName;
+                  hiddenInput.value = select.value;
+                  select.parentNode.appendChild(hiddenInput);
+                }
+              }
+            }
+            
+            // Handle form submission for all combo boxes
+            document.addEventListener('DOMContentLoaded', function() {
+              const form = document.querySelector('form');
+              const comboBoxes = [
+                { selectId: 'projectNameSelect', inputId: 'projectNameCustom', fieldName: 'project_name' },
+                { selectId: 'assignedToSelect', inputId: 'assignedToCustom', fieldName: 'assigned_to' },
+                { selectId: 'endUserSelect', inputId: 'endUserCustom', fieldName: 'end_user' },
+                { selectId: 'locationSelect', inputId: 'locationCustom', fieldName: 'location' },
+                { selectId: 'currentLocationSelect', inputId: 'currentLocationCustom', fieldName: 'current_location' }
+              ];
+              
+              form.addEventListener('submit', function() {
+                comboBoxes.forEach(combo => {
+                  const select = document.getElementById(combo.selectId);
+                  const customInput = document.getElementById(combo.inputId);
+                  
+                  if (select && customInput) {
+                    // Remove any existing hidden inputs for this field
+                    const existingHidden = document.querySelectorAll(`input[name="${combo.fieldName}"][type="hidden"]`);
+                    existingHidden.forEach(input => input.remove());
+                    
+                    if (select.value && select.value !== 'other') {
+                      // Use selected value
+                      const hiddenInput = document.createElement('input');
+                      hiddenInput.type = 'hidden';
+                      hiddenInput.name = combo.fieldName;
+                      hiddenInput.value = select.value;
+                      form.appendChild(hiddenInput);
+                      customInput.name = '';
+                    } else if (select.value === 'other') {
+                      // Use custom input value
+                      customInput.name = combo.fieldName;
+                    }
+                  }
+                });
+              });
+            });
+            </script>
+          </div>
+
+          <!-- 📌 Location Info -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Location Info</div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Deployment Location</label>
+            <select name="location_select" id="locationSelect" class="form-select form-select-sm mb-2" onchange="toggleLocationInput()">
+              <option value="">Select deployment location</option>
+              {% for location in existing_locations %}
+              <option value="{{ location }}" {% if values.location == location %}selected{% endif %}>{{ location }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="location" id="locationCustom" class="form-control form-control-sm" value="{% if values.location and values.location not in existing_locations %}{{ values.location }}{% endif %}" placeholder="Type new deployment location" style="display: {% if values.location and values.location not in existing_locations %}block{% else %}none{% endif %};">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Current Location</label>
+            <select name="current_location_select" id="currentLocationSelect" class="form-select form-select-sm mb-2" onchange="toggleCurrentLocationInput()">
+              <option value="">Select current location</option>
+              {% for location in existing_current_locations %}
+              <option value="{{ location }}" {% if values.current_location == location %}selected{% endif %}>{{ location }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="current_location" id="currentLocationCustom" class="form-control form-control-sm" value="{% if values.current_location and values.current_location not in existing_current_locations %}{{ values.current_location }}{% endif %}" placeholder="Type new current location" style="display: {% if values.current_location and values.current_location not in existing_current_locations %}block{% else %}none{% endif %};">
+          </div>
+
+          <!-- 🗂 Classification -->
+          <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Classification</div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Category</label>
+            <select name="category_id" class="form-select form-select-sm">
+              {% for cat in categories %}
+              <option value="{{ cat.id }}" {% if values.category_id == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small">Status</label>
+            <select name="status_id" id="statusSelect" class="form-select form-select-sm">
+              {% for stat in statuses %}
+              <option value="{{ stat.id }}" data-status-name="{{ stat.name }}" {% if values.status_id == stat.id|stringformat:"s" %}selected{% endif %}>{{ stat.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- 🔧 Damage Reason (conditional field) -->
+          <div class="col-12" id="damageReasonSection" style="display: none;">
+            <label class="form-label small">Damage Reason</label>
+            <textarea class="form-control form-control-sm" name="damage_reason" rows="3" placeholder="Please describe the reason for damage...">{{ values.damage_reason|default_if_none:'' }}</textarea>
+          </div>
+
+          <!-- 🔍 Lost Status Fields (conditional fields) -->
+          <div id="lostSection" style="display: none;">
+            <div class="col-12">
+              <label class="form-label small">Lost Remarks</label>
+              <textarea class="form-control form-control-sm" name="lost_remarks" rows="3" placeholder="Please describe the circumstances of loss...">{{ values.lost_remarks|default_if_none:'' }}</textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Replacement Documents</label>
+              <input type="file" class="form-control form-control-sm" name="replacement_documents" id="replacementDocuments" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tiff">
+              <div class="form-text">Upload replacement documents (multiple files allowed). Supported formats: PDF, Images</div>
+              <div id="selectedReplacementFiles" class="mt-2" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <small class="text-muted fw-medium">Selected files:</small>
+                  <button type="button" class="btn btn-sm btn-outline-secondary clear-all-replacement-files" title="Clear all files">
+                    <i class="bi bi-trash3"></i> Clear All
+                  </button>
+                </div>
+                <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                  <ul id="replacementFileList" class="list-unstyled mb-0"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 🔘 Submit -->
+          <div class="col-12 text-end mt-3">
+            {% if is_admin or is_encoder %}
+            <a href="{% url 'equipments:index' %}" class="btn btn-sm btn-outline-secondary px-4">Cancel</a>
+            <button type="submit" class="btn btn-sm btn-custom px-4">Save</button>
+            {% endif %}
+          </div>
+
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const statusSelect = document.getElementById('statusSelect');
+  const damageReasonSection = document.getElementById('damageReasonSection');
+  const damageReasonTextarea = document.querySelector('textarea[name="damage_reason"]');
+  const lostSection = document.getElementById('lostSection');
+  const lostRemarksTextarea = document.querySelector('textarea[name="lost_remarks"]');
+  const replacementDocsInput = document.getElementById('replacementDocuments');
+
+  // Function to update replacement file list display
+  function updateReplacementFileList() {
+    if (!replacementDocsInput) return;
+    
+    const files = replacementDocsInput.files;
+    const fileList = document.getElementById('replacementFileList');
+    const selectedFilesDiv = document.getElementById('selectedReplacementFiles');
+    
+    if (files.length > 0) {
+      fileList.innerHTML = '';
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileSize = (file.size / 1024 / 1024).toFixed(2); // Convert to MB
+        const listItem = document.createElement('li');
+        listItem.className = 'd-flex justify-content-between align-items-center py-2 border-bottom';
+        listItem.setAttribute('data-file-index', i);
+        listItem.innerHTML = `
+          <div class="d-flex align-items-center">
+            <i class="bi bi-file-earmark me-2 text-primary"></i>
+            <div>
+              <div class="fw-medium text-dark">${file.name}</div>
+              <small class="text-muted">${fileSize} MB</small>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-danger remove-replacement-file-btn" data-file-index="${i}" title="Remove file">
+            <i class="bi bi-x"></i>
+          </button>
+        `;
+        fileList.appendChild(listItem);
+      }
+      selectedFilesDiv.style.display = 'block';
+    } else {
+      selectedFilesDiv.style.display = 'none';
+    }
+  }
+
+  function toggleConditionalFields() {
+    const selectedOption = statusSelect.options[statusSelect.selectedIndex];
+    const statusName = selectedOption.getAttribute('data-status-name');
+    
+    // Handle Damaged status
+    if (statusName === 'Damaged') {
+      damageReasonSection.style.display = 'block';
+      if (damageReasonTextarea) damageReasonTextarea.required = true;
+    } else {
+      damageReasonSection.style.display = 'none';
+      if (damageReasonTextarea) {
+        damageReasonTextarea.required = false;
+        // Clear the damage reason if switching away from damaged status
+        if (statusName !== 'Damaged') {
+          damageReasonTextarea.value = '';
+        }
+      }
+    }
+    
+    // Handle Lost status
+    if (statusName === 'Lost') {
+      lostSection.style.display = 'block';
+      if (lostRemarksTextarea) lostRemarksTextarea.required = true;
+    } else {
+      lostSection.style.display = 'none';
+      if (lostRemarksTextarea) {
+        lostRemarksTextarea.required = false;
+        // Clear the lost remarks and files if switching away from lost status
+        if (statusName !== 'Lost') {
+          lostRemarksTextarea.value = '';
+          // Clear replacement documents
+          if (replacementDocsInput) {
+            replacementDocsInput.value = '';
+            updateReplacementFileList();
+          }
+        }
+      }
+    }
+  }
+
+  // Check initial status on page load
+  if (statusSelect) {
+    toggleConditionalFields();
+    // Listen for status changes
+    statusSelect.addEventListener('change', toggleConditionalFields);
+  }
+
+  // Replacement Documents File Management
+  if (replacementDocsInput) {
+    replacementDocsInput.addEventListener('change', function() {
+      updateReplacementFileList();
+    });
+  }
+
+  // Handle replacement file removal
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-replacement-file-btn')) {
+      const fileIndex = parseInt(e.target.closest('.remove-replacement-file-btn').dataset.fileIndex);
+      const input = replacementDocsInput;
+      
+      if (input) {
+        const dt = new DataTransfer();
+        
+        // Add all files except the one to be removed to DataTransfer object
+        for (let i = 0; i < input.files.length; i++) {
+          if (i !== fileIndex) {
+            dt.items.add(input.files[i]);
+          }
+        }
+        
+        // Update the input files
+        input.files = dt.files;
+        
+        // Update the display
+        updateReplacementFileList();
+      }
+    }
+  });
+
+  // Handle clear all replacement files
+  document.addEventListener('click', function(e) {
+    if (e.target.closest('.clear-all-replacement-files')) {
+      if (replacementDocsInput) {
+        replacementDocsInput.value = ''; // Clear the input
+        updateReplacementFileList(); // Update the display
+      }
+    }
+  });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section>
+    <div class="container" data-aos="fade-in">
+        <div class="row">
+            <div class="col-lg-12 text-center mb-5">
+                <br>
+                <h1 class="page-title" style="color: #66b365; font-weight: 500;">Commodities</h1>
+            </div>
+        </div>
+        <div class="container" data-aos="fade-in">
+            <div class="row card-container">
+                {% for commodity in commodities %}
+                    <div class="imgcontainer col-md-4 col-lg-6 mb-4">
+                        {%if commodity.img%}
+                        <div class="card text-white" style="background-image: url('{{ commodity.img.url }}'); background-size: cover; background-position: center; border-radius: 10px;">
+                            {%endif%}
+                            <div class="card-body d-flex flex-column justify-content-end" style="background: rgba(0, 0, 0, 0.3);">
+                                <h5 class="card-title">{{ commodity.name }}</h5>
+                                <p class="card-text">{{ commodity.detail }}</p>
+                                <a href="{% url 'commodetail' commodity.com_id %}" class="cstm-button btn btn-primary">Discover</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col d-flex justify-content-center">
+                <div class="pagination-wrapper">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-end">
+                            {% if commodities.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ commodities.previous_page_number }}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% for num in commodities.paginator.page_range %}
+                                <li class="page-item {% if num == commodities.number %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endfor %}
+                            {% if commodities.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ commodities.next_page_number }}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                        <span class="visually-hidden">Next</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .pagination-wrapper .pagination .page-item .page-link {
+        background-color: #66b365 !important;
+        border-color: #66b365 !important;
+        color: white !important;
+    }
+    .pagination-wrapper .pagination .page-item.active .page-link {
+        background-color: #66b365 !important;
+        border-color: #66b365 !important;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .card {
+        height: 648px;
+        width: 620px;
+        display: flex;
+        overflow: hidden
+    }
+    .card-container{
+        justify-content: space-evenly;
+    }
+
+    .cstm-button{
+        text-decoration: none;
+        font-size: 1.2rem;
+        color: white;
+        border-color: transparent;
+        background-color: #66b365;
+        overflow: hidden;
+        height: 2.7rem;
+        border-radius: 25px;
+        
+    }
+    .cstm-button .button:hover{
+        border-color: transparent;
+        background-color: #43b14b;
+    }
+    
+    .cstm-button .button:active{
+        border-color: transparent;
+        background-color: #66b365 !important;
+    }
+    .cstm-button .button:focus-visible{
+        border-color: transparent;
+        background-color: #66b365 !important;
+    }
+    
+@media only screen and (max-width: 1025px) {
+        .imgcontainer{
+    width: 400px;
+    height: 400px;}
+    .card{
+        width: 400px;
+        height: 400px;  
+    }
+}
+@media only screen and (max-width: 768px) {
+        .imgcontainer{
+    width: 300px;
+    height: 300px;
+}
+    
+    .card{
+        width: 300px;
+        height: 300px;  
+    }
+}
+@media only screen and (max-width: 426px) {
+         .imgcontainer{
+    width: 250px;
+    height: 250px;
+    display: flex;
+    justify-content: center;
+}
+    .card{
+        width: 250px;
+        height: 250px;  
+    }
+.card-text{
+    display: none;
+}
+}
+</style>
+  
+{% endblock %}

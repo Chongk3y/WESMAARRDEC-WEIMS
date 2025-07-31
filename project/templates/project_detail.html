@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-6"> 
+    <div class="row">
+        <div class="col URL">
+            <h1>{{ project.title }}</h1>
+            <a href ="{% url 'project' %}"> See All Projects</a>
+        </div>
+    </div>
+    <hr class="custom-hr">
+    <div class="container description">
+        <p>Description: {{ project.snippet}}</p>
+        <p>DATE ENDED : {{ project.end_date }}</p>
+        <p>DATE STARTED : {{ project.end_date }}</p>
+    </div>
+    <div class="container Type">
+        <p><strong>Project Type:</strong>  {{ project.proj_type}}</p>
+        <p><strong>Project Leader:</strong>  {{ project.proj_leader }}</p>
+        <p><strong>Researchers:</strong></p>
+        <ul>
+            {% for researcher in project.proj_team.all %}
+                <li>
+                    {{ researcher.fname }} {{ researcher.lname }}
+                    <br>
+                    Email: {{ researcher.email }}
+                    <br>
+                    Contact No: {{ researcher.contact_no }}
+                </li>
+            {% empty %}
+                <li>No researchers assigned to this project.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<style>
+    h1{
+        color: #43b14b;
+        text-align: center;
+        font-size: 4rem;
+    }
+    .custom-hr{
+        border: 1px solid #43b14b;
+    }
+    .URL{
+        text-align: end;
+    }
+    .URL a{
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #66b365;
+        text-decoration: underline;
+        text-decoration-color: currentColor;
+    }
+    .description{
+        font-weight: 500;
+        color: #66b365
+    }
+    .Type{
+        color: black;
+        padding-left: 10%;
+    }
+</style>
+{% endblock %}

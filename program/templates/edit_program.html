@@ -1,0 +1,87 @@
+{% extends 'cmibase.html' %}
+
+{% block content %}
+<style>
+    .custom-form {
+        font-size: 1.2rem; /* Increase font size by 20% */
+        padding: 2rem; /* Increase padding */
+    }
+</style>
+<div class="container" style="padding-bottom: 10vh;">
+    <div class="row justify-content-center mt-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg p-5 custom-form">
+                <h2 class="mb-4 text-center">Edit Program: {{ program.title }}</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_title">Title:</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_status">Status:</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_prog_description">Program Description:</label>
+                        {{ form.prog_description }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_program_leader">Program Leader:</label>
+                        {{ form.program_leader }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_commodity">Commodity:</label>
+                        {{ form.commodity }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_impl_agency">Implementing Agency:</label>
+                        {{ form.impl_agency }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_co_impl_agency">Co-Implementing Agency:</label>
+                        {{ form.co_impl_agency }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_funding_agency">Funding Agency:</label>
+                        {{ form.funding_agency }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_start_date">Start Date:</label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_duration">Duration:</label>
+                        {{ form.duration }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_final_impl_date">Final Implementation Date:</label>
+                        {{ form.final_impl_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_daterequestedext">Date Requested Extension:</label>
+                        {{ form.daterequestedext }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_requested_by">Requested By:</label>
+                        {{ form.requested_by }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_ext_duration">Extension Duration:</label>
+                        {{ form.ext_duration }}
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_prog_file">Program File:</label>
+                        {{ form.prog_file }}
+                    </div>
+                    <div class="mb-3 float-end">
+                        <button type="submit" class="btn btn-success">Update Program</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% block navbar %}
+{% endblock %}
+{% endblock content %}
