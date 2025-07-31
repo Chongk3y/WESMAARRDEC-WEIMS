@@ -44,6 +44,10 @@
             {% if user.is_superuser or user.secretariat %}
             <li><a href="" class="dropdown-item disabled">Settings<i class="bi bi-person-check-fill"></i></a></li>
             <hr>
+              {% if user.is_superuser or user.secretariat %}
+            <li><a href="{% url 'CMIadmin' %}" class="dropdown-item">Dashboard <i class="bi bi-layout-wtf"></i></a></li>
+            <li><a href="/weims/dashboard/" class="dropdown-item">WEIMS - Equipment Management <i class="bi bi-tools"></i></a></li>
+              {% endif %}
             <li><a href="{%url 'index' %}" class="dropdown-item">End-user View<i class="bi bi-layout-wtf"></i></a></li>
             {% endif %}
             <li><a href="" class="dropdown-item">Change Password <i class="bi bi-key"></i></a></li>
@@ -64,6 +68,11 @@
         <li class="nav-item" id="mainNav">
           <a class="nav-link" href="{% url 'CMIadmin' %}"><i class="fa-solid fa-chart-simple"></i></i>  Dashboard </a>
         </li>
+        {% if user.is_superuser or user.secretariat %}
+        <li class="nav-item" id="mainNav">
+          <a class="nav-link" href="/weims/dashboard/"><i class="fa-solid fa-tools"></i>  WEIMS - Equipment Management </a>
+        </li>
+        {% endif %}
         <li class="nav-item" id="mainNav">
           <a class="nav-link" href="{% url 'accountman' %}"><i class="fa-solid fa-id-card"></i>  Manage Profiles </a>
         </li>

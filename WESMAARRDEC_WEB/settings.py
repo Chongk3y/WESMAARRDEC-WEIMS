@@ -27,6 +27,7 @@ SECRET_KEY = 'django-insecure-1ye#_r_vkvicg^ig@z3%w&l6w+_1i^a=z7=g0waw-^s0_pjyl2
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+#ALLOWED_HOSTS = ['reguria.pythonanywhere.com']
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
@@ -57,6 +58,8 @@ INSTALLED_APPS = [
     'project',
     'sub',
     'wdamms'
+    'equipments',  # WEIMS Equipment Management System
+    'import_export',  # For WEIMS functionality
 ]
 
 MIDDLEWARE = [
@@ -106,6 +109,39 @@ DATABASES = {
 }
 
 
+#DATABASES = {
+     #'default': {
+         #mysql localhost
+     #   'ENGINE': 'django.db.backends.mysql',
+     #   'NAME': 'reguria$WESMAARDECDB',
+     #   'USER': 'reguria',
+     #  'PASSWORD': 'w32m@ARRd3c_pR0j3cT',
+     #  'HOST': 'reguria.mysql.pythonanywhere-services.com',
+     # 'PORT': 3306
+      #'OPTIONS': {
+        #"init_command": "SET foreign_key_checks = 0;",
+
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': 'postgres',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432',
+    #     'USER': 'postgres',
+    #    'PASSWORD': 'postgresuser',
+    #}
+   #}
+#}
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'wesmaarrdecdb',           # Create this DB in Laragon's phpMyAdmin
+        'USER': 'root',
+        'PASSWORD': '',                    # Laragon default is empty password
+        'HOST': '127.0.0.1',
+        'PORT': '3306',
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -151,6 +187,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 AUTH_USER_MODEL = 'auth_user.User'
 
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+      os.path.join(BASE_DIR, "static"),
+]
+AUTH_USER_MODEL = 'auth_user.User'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -163,3 +207,7 @@ PASSWORD_HASHERS = [
 ]
 
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+
+# Crispy Forms Configuration
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"

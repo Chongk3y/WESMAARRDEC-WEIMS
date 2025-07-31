@@ -105,6 +105,7 @@
           <hr>
             {% if user.is_superuser or user.secretariat %}
           <li><a href="{% url 'CMIadmin' %}" class="dropdown-item">Dashboard <i class="bi bi-layout-wtf"></i></a></li>
+          <li><a href="/weims/dashboard/" class="dropdown-item">WEIMS - Equipment Management <i class="bi bi-tools"></i></a></li>
             {% endif %}
           {% endif %}
           <li><a href="{% url 'change_password' %}" class="dropdown-item">Change Password <i class="bi bi-key"></i></a></li>
