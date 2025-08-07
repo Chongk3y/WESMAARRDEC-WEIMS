@@ -699,28 +699,31 @@ def delete_equipment(request, id):
 @login_required
 @secretariat_required
 def dashboard(request):
-    total_equipments = Equipment.objects.count()
+    total_equipments = Equipment.objects.filter(is_archived=False, is_returned=False).count()
     total_archived = Equipment.objects.filter(is_archived=True).count()
     total_returned = Equipment.objects.filter(is_returned=True).count()
 
-    # Status counts for pie chart
-    status_counts = Equipment.objects.values('status__name').annotate(
+    # Status counts for pie chart (only for active equipment)
+    status_counts = Equipment.objects.filter(is_archived=False, is_returned=False).values('status__name').annotate(
         name=F('status__name'), count=Count('id')
     )
     status_labels = [s['name'] for s in status_counts]
     status_data = [s['count'] for s in status_counts]
 
-    # Category counts for bar chart
-    categories = Category.objects.annotate(count=Count('equipment'))
+    # Category counts for bar chart (only for active equipment)
+    from django.db.models import Q
+    categories = Category.objects.annotate(
+        count=Count('equipment', filter=Q(equipment__is_archived=False, equipment__is_returned=False))
+    )
     category_labels = [cat.name for cat in categories]
     category_counts = [cat.count for cat in categories]
 
-    # Recent equipments
-    recent_equipments = Equipment.objects.order_by('-id')[:5]
+    # Recent equipments (only active ones)
+    recent_equipments = Equipment.objects.filter(is_archived=False, is_returned=False).order_by('-id')[:5]
 
-    # Equipments acquired per year (from PO date)
+    # Equipments acquired per year (from PO date) - only active equipment
     from django.db.models.functions import ExtractYear
-    year_qs = Equipment.objects.exclude(item_purdate=None).values(year=ExtractYear('item_purdate')).annotate(count=Count('id')).order_by('year')
+    year_qs = Equipment.objects.filter(is_archived=False, is_returned=False).exclude(item_purdate=None).values(year=ExtractYear('item_purdate')).annotate(count=Count('id')).order_by('year')
     year_labels = [str(x['year']) for x in year_qs]
     year_data = [x['count'] for x in year_qs]
 
@@ -742,8 +745,8 @@ def dashboard(request):
     assigned_counts = [x['count'] for x in assigned_qs]
     assigned_amounts = [float(x['total'] or 0) for x in assigned_qs]
 
-    # Equipments by Item Name: Count
-    name_qs = Equipment.objects.values('item_name').annotate(count=Count('id')).order_by('-count')
+    # Equipments by Item Name: Count (only active equipment)
+    name_qs = Equipment.objects.filter(is_archived=False, is_returned=False).values('item_name').annotate(count=Count('id')).order_by('-count')
     itemname_labels = [x['item_name'] for x in name_qs]
     itemname_counts = [x['count'] for x in name_qs]
     context = {
