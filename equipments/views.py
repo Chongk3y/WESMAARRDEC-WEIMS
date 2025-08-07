@@ -770,6 +770,12 @@ def dashboard(request):
     name_qs = Equipment.objects.filter(is_archived=False, is_returned=False).values('item_name').annotate(count=Count('id')).order_by('-count')
     itemname_labels = [x['item_name'] for x in name_qs]
     itemname_counts = [x['count'] for x in name_qs]
+
+    # Equipments by Project Name: Count (only active equipment)
+    project_qs = Equipment.objects.filter(is_archived=False, is_returned=False).exclude(project_name__isnull=True).exclude(project_name='').values('project_name').annotate(count=Count('id')).order_by('-count')
+    project_labels = [x['project_name'] for x in project_qs]
+    project_counts = [x['count'] for x in project_qs]
+    
     context = {
         'total_equipments': total_equipments,
         'total_archived': total_archived,
@@ -790,6 +796,8 @@ def dashboard(request):
         'assigned_amounts': json.dumps(assigned_amounts),
         'itemname_labels': json.dumps(itemname_labels),
         'itemname_counts': json.dumps(itemname_counts),
+        'project_labels': json.dumps(project_labels),
+        'project_counts': json.dumps(project_counts),
         'is_admin': is_admin(request.user),
         'is_encoder': is_encoder(request.user),
         'is_superadmin': is_superadmin(request.user),

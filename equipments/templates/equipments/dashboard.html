@@ -204,6 +204,20 @@
       </div>
     </div>
   </div>
+
+  <!-- Equipments by Project Name: Total Number -->
+  <div class="row mt-4 g-3">
+    <div class="col-md-12">
+      <div class="card shadow-sm border-0 dashboard-chart-card">
+        <div class="card-header py-2 bg-light">
+          <small class="fw-semibold">📊 Equipments by Project Name: Total Number</small>
+        </div>
+        <div class="card-body p-2">
+          <canvas id="projectChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Chart Scripts -->
@@ -366,6 +380,29 @@
         label: 'Total Number',
         data: {{ itemname_counts|safe }},
         backgroundColor: '#6610f2',
+        borderRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+
+  // Equipments by Project Name: Total Number (Bar)
+  const ctxProject = document.getElementById('projectChart').getContext('2d');
+  new Chart(ctxProject, {
+    type: 'bar',
+    data: {
+      labels: {{ project_labels|safe }},
+      datasets: [{
+        label: 'Total Number',
+        data: {{ project_counts|safe }},
+        backgroundColor: '#ff6b6b',
         borderRadius: 5
       }]
     },
