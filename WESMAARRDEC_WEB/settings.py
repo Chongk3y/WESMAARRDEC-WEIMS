@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'program',
     'project',
     'sub',
-    'wdamms'
+    'wdamms',  # Activity Management System
     'equipments',  # WEIMS Equipment Management System
     'import_export',  # For WEIMS functionality
 ]
@@ -101,6 +101,7 @@ WSGI_APPLICATION = 'WESMAARRDEC_WEB.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# SQLite configuration for local development
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -108,39 +109,18 @@ DATABASES = {
     }
 }
 
-
+# MySQL configuration (commented out for local development)
+# Uncomment and configure for production use
 #DATABASES = {
-     #'default': {
-         #mysql localhost
-     #   'ENGINE': 'django.db.backends.mysql',
-     #   'NAME': 'reguria$WESMAARDECDB',
-     #   'USER': 'reguria',
-     #  'PASSWORD': 'w32m@ARRd3c_pR0j3cT',
-     #  'HOST': 'reguria.mysql.pythonanywhere-services.com',
-     # 'PORT': 3306
-      #'OPTIONS': {
-        #"init_command": "SET foreign_key_checks = 0;",
-
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'postgres',
-    #     'HOST': 'localhost',
-    #     'PORT': '5432',
-    #     'USER': 'postgres',
-    #    'PASSWORD': 'postgresuser',
-    #}
-   #}
+#    'default': {
+#        'ENGINE': 'django.db.backends.mysql',
+#        'NAME': 'wesmaarrdecdb',           # Create this DB in Laragon's phpMyAdmin
+#        'USER': 'root',
+#        'PASSWORD': '',                    # Laragon default is empty password
+#        'HOST': '127.0.0.1',
+#        'PORT': '3306',
+#    }
 #}
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'wesmaarrdecdb',           # Create this DB in Laragon's phpMyAdmin
-        'USER': 'root',
-        'PASSWORD': '',                    # Laragon default is empty password
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

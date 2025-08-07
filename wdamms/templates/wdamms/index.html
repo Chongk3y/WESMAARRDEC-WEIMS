@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-tasks me-2"></i>
+                        {{ app_name }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>Welcome to the Activity Management System</h5>
+                            <p class="lead">
+                                This module is designed to help manage and monitor activities within the WESMAARRDEC system.
+                            </p>
+                            
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle me-2"></i>System Status</h6>
+                                <p class="mb-0">The Activity Management System is currently under development. Features will be added progressively to support comprehensive activity tracking and management.</p>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h6>Planned Features:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Activity Planning</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Task Management</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Progress Tracking</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Resource Allocation</li>
+                                        <li><i class="fas fa-check-circle text-success me-2"></i>Reporting & Analytics</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Integration Points:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-link text-info me-2"></i>Project Management</li>
+                                        <li><i class="fas fa-link text-info me-2"></i>Equipment System (WEIMS)</li>
+                                        <li><i class="fas fa-link text-info me-2"></i>Consortium Management</li>
+                                        <li><i class="fas fa-link text-info me-2"></i>Team Management</li>
+                                        <li><i class="fas fa-link text-info me-2"></i>Commodity Management</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-cogs fa-4x text-secondary mb-3"></i>
+                                    <h6>Under Construction</h6>
+                                    <p class="small text-muted">
+                                        This system is being developed to complement the existing WESMAARRDEC modules.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

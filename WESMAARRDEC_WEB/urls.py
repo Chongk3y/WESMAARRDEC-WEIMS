@@ -140,6 +140,9 @@ urlpatterns = [
     path('comment/delete/<int:comment_id>/', delete_comment, name='delete_comment'),
     path('comment/<int:comment_id>/edit/', edit_comment, name='edit_comment'),
     
+    # WDAMMS Activity Management System
+    path('wdamms/', include('wdamms.urls')),
+    
     # WEIMS Equipment Management System - Secretariat Only Access
     path('weims/', include('equipments.urls')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
