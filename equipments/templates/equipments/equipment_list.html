@@ -162,6 +162,20 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+          <!-- Equipment Information Display -->
+          <div class="alert alert-info mb-3">
+            <h6 class="mb-2"><i class="bi bi-info-circle me-2"></i>Equipment Details</h6>
+            <div class="row">
+              <div class="col-sm-6">
+                <strong>Property Number:</strong><br>
+                <span id="returnEquipmentProperty" class="text-primary">N/A</span>
+              </div>
+              <div class="col-sm-6">
+                <strong>Equipment Name:</strong><br>
+                <span id="returnEquipmentName" class="text-primary">N/A</span>
+              </div>
+            </div>
+          </div>
           <div class="mb-3">
             <label for="returnDocument" class="form-label">Upload Return Documents</label>
             <input type="file" class="form-control" id="returnDocument" name="return_document" accept=".pdf,image/*" multiple required>
@@ -897,7 +911,15 @@ $(document).on('change', '.column-select', function () {
     $('.modal').not(this).modal('hide');
     var button = $(event.relatedTarget);
     var eqId = button.data('eqid');
+    var eqName = button.data('eqname');
+    var eqProperty = button.data('eqproperty');
+    
+    // Set the equipment ID for form submission
     $('#returnEquipmentId').val(eqId);
+    
+    // Display equipment information
+    $('#returnEquipmentName').text(eqName || 'N/A');
+    $('#returnEquipmentProperty').text(eqProperty || 'N/A');
   });
 
   // Reset file input when modal is hidden
@@ -905,6 +927,11 @@ $(document).on('change', '.column-select', function () {
     $('#returnDocument')[0].value = '';
     $('#selectedFiles').hide();
     $('#fileList').empty();
+    
+    // Clear equipment information
+    $('#returnEquipmentName').text('N/A');
+    $('#returnEquipmentProperty').text('N/A');
+    $('#returnEquipmentId').val('');
   });
 
   // Handle file selection display for return modal

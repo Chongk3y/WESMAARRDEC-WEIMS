@@ -175,7 +175,10 @@ def equipment_table_json(request):
                 if not eq.is_returned:
                     actions += f'''
                     <li>
-                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#returnModal" data-eqid="{eq.id}">
+                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#returnModal" 
+                            data-eqid="{eq.id}" 
+                            data-eqname="{eq.item_name or 'N/A'}" 
+                            data-eqproperty="{eq.item_propertynum or 'N/A'}">
                         <i class="bi bi-arrow-90deg-left"></i> Return
                     </button>
                     </li>
