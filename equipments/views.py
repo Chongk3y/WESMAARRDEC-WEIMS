@@ -499,6 +499,8 @@ def edit_equipment(request, id):
             'item_amount': equipment.item_amount,
             'assigned_to': equipment.assigned_to,
             'location': equipment.location,
+            'current_location': equipment.current_location,
+            'project_name': equipment.project_name,
             'end_user': equipment.end_user,
             'emp_id': equipment.emp_id,
             'category_id': equipment.category_id,
@@ -527,6 +529,8 @@ def edit_equipment(request, id):
         equipment.item_amount = request.POST.get('item_amount')
         equipment.assigned_to = request.POST.get('assigned_to') or None
         equipment.location = request.POST.get('location')
+        equipment.current_location = request.POST.get('current_location')
+        equipment.project_name = request.POST.get('project_name') or None
         equipment.end_user = request.POST.get('end_user') or None
         equipment.emp_id = request.POST.get('emp_id')
         equipment.category_id = request.POST.get('category_id')
@@ -555,6 +559,9 @@ def edit_equipment(request, id):
 
         if request.FILES.get('user_image'):
             equipment.user_image = request.FILES['user_image']
+
+        if request.FILES.get('order_receipt'):
+            equipment.order_receipt = request.FILES['order_receipt']
 
         # Save equipment first
         equipment.save()
@@ -592,7 +599,9 @@ def edit_equipment(request, id):
             'supplier': 'Supplier',
             'item_amount': 'Amount',
             'assigned_to': 'Assigned To',
-            'location': 'Location',
+            'location': 'Deployment Location',
+            'current_location': 'Current Location',
+            'project_name': 'Project Name',
             'end_user': 'End User',
             'emp_id': 'Employee',
             'category_id': 'Category',
@@ -656,11 +665,23 @@ def edit_equipment(request, id):
 
         return redirect('equipments:index')
 
+    # Get existing values for dropdowns
+    existing_end_users = Equipment.objects.exclude(end_user__isnull=True).exclude(end_user__exact='').values_list('end_user', flat=True).distinct().order_by('end_user')
+    existing_assigned_to = Equipment.objects.exclude(assigned_to__isnull=True).exclude(assigned_to__exact='').values_list('assigned_to', flat=True).distinct().order_by('assigned_to')
+    existing_project_names = Equipment.objects.exclude(project_name__isnull=True).exclude(project_name__exact='').values_list('project_name', flat=True).distinct().order_by('project_name')
+    existing_locations = Equipment.objects.exclude(location__isnull=True).exclude(location__exact='').values_list('location', flat=True).distinct().order_by('location')
+    existing_current_locations = Equipment.objects.exclude(current_location__isnull=True).exclude(current_location__exact='').values_list('current_location', flat=True).distinct().order_by('current_location')
+
     return render(request, 'equipments/edit.html', {
         'equipment': equipment,
         'categories': categories,
         'statuses': statuses,
         'users': users,
+        'existing_end_users': existing_end_users,
+        'existing_assigned_to': existing_assigned_to,
+        'existing_project_names': existing_project_names,
+        'existing_locations': existing_locations,
+        'existing_current_locations': existing_current_locations,
     })
 
 @login_required

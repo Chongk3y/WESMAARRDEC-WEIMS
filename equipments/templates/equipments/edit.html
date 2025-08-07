@@ -61,20 +61,72 @@
             <label class="form-label small">Amount</label>
             <input type="number" step="0.01" class="form-control form-control-sm" name="item_amount" value="{{ equipment.item_amount }}">
           </div>
+          <div class="col-md-6">
+            <label class="form-label small">Order Receipt</label>
+            <input type="file" class="form-control form-control-sm" name="order_receipt" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx">
+            {% if equipment.order_receipt %}
+            <div class="mt-2">
+              <small class="text-muted">Current: <a href="{{ equipment.order_receipt.url }}" target="_blank">{{ equipment.order_receipt.name|slice:"15:" }}</a></small>
+            </div>
+            {% endif %}
+          </div>
 
           <!-- 🧑‍💼 Assignment -->
           <div class="col-12 small fw-bold text-secondary border-bottom pt-2 pb-1">Assignment & Location</div>
           <div class="col-md-6">
+            <label class="form-label small">Project Name</label>
+            <select name="project_name_select" id="projectNameSelect" class="form-select form-select-sm mb-2" onchange="toggleProjectNameInput()">
+              <option value="">Select project name</option>
+              {% for project in existing_project_names %}
+              <option value="{{ project }}" {% if equipment.project_name == project %}selected{% endif %}>{{ project }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="project_name" id="projectNameCustom" class="form-control form-control-sm" value="{% if equipment.project_name and equipment.project_name not in existing_project_names %}{{ equipment.project_name }}{% endif %}" placeholder="Type new project name" style="display: {% if equipment.project_name and equipment.project_name not in existing_project_names %}block{% else %}none{% endif %};">
+          </div>
+          <div class="col-md-6">
             <label class="form-label small">Assigned To</label>
-            <input type="text" class="form-control form-control-sm" name="assigned_to" value="{{ equipment.assigned_to }}">
+            <select name="assigned_to_select" id="assignedToSelect" class="form-select form-select-sm mb-2" onchange="toggleAssignedToInput()">
+              <option value="">Select assigned to</option>
+              {% for assignee in existing_assigned_to %}
+              <option value="{{ assignee }}" {% if equipment.assigned_to == assignee %}selected{% endif %}>{{ assignee }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="assigned_to" id="assignedToCustom" class="form-control form-control-sm" value="{% if equipment.assigned_to and equipment.assigned_to not in existing_assigned_to %}{{ equipment.assigned_to }}{% endif %}" placeholder="Type new assignee name" style="display: {% if equipment.assigned_to and equipment.assigned_to not in existing_assigned_to %}block{% else %}none{% endif %};">
           </div>
           <div class="col-md-6">
             <label class="form-label small">End User</label>
-            <input type="text" class="form-control form-control-sm" name="end_user" value="{{ equipment.end_user }}">
+            <select name="end_user_select" id="endUserSelect" class="form-select form-select-sm mb-2" onchange="toggleEndUserInput()">
+              <option value="">Select end user</option>
+              {% for user in existing_end_users %}
+              <option value="{{ user }}" {% if equipment.end_user == user %}selected{% endif %}>{{ user }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="end_user" id="endUserCustom" class="form-control form-control-sm" value="{% if equipment.end_user and equipment.end_user not in existing_end_users %}{{ equipment.end_user }}{% endif %}" placeholder="Type new end user name" style="display: {% if equipment.end_user and equipment.end_user not in existing_end_users %}block{% else %}none{% endif %};">
           </div>
           <div class="col-md-6">
-            <label class="form-label small">Location</label>
-            <input type="text" class="form-control form-control-sm" name="location" value="{{ equipment.location }}">
+            <label class="form-label small">Deployment Location</label>
+            <select name="location_select" id="locationSelect" class="form-select form-select-sm mb-2" onchange="toggleLocationInput()">
+              <option value="">Select deployment location</option>
+              {% for location in existing_locations %}
+              <option value="{{ location }}" {% if equipment.location == location %}selected{% endif %}>{{ location }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="location" id="locationCustom" class="form-control form-control-sm" value="{% if equipment.location and equipment.location not in existing_locations %}{{ equipment.location }}{% endif %}" placeholder="Type new deployment location" style="display: {% if equipment.location and equipment.location not in existing_locations %}block{% else %}none{% endif %};">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Current Location</label>
+            <select name="current_location_select" id="currentLocationSelect" class="form-select form-select-sm mb-2" onchange="toggleCurrentLocationInput()">
+              <option value="">Select current location</option>
+              {% for location in existing_current_locations %}
+              <option value="{{ location }}" {% if equipment.current_location == location %}selected{% endif %}>{{ location }}</option>
+              {% endfor %}
+              <option value="other">Other (Type new)</option>
+            </select>
+            <input type="text" name="current_location" id="currentLocationCustom" class="form-control form-control-sm" value="{% if equipment.current_location and equipment.current_location not in existing_current_locations %}{{ equipment.current_location }}{% endif %}" placeholder="Type new current location" style="display: {% if equipment.current_location and equipment.current_location not in existing_current_locations %}block{% else %}none{% endif %};">
           </div>
 
           <!-- 📁 Classification -->
@@ -271,6 +323,90 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
+});
+
+// Toggle functions for each combo box
+function toggleProjectNameInput() {
+  toggleComboInput('projectNameSelect', 'projectNameCustom', 'project_name');
+}
+
+function toggleAssignedToInput() {
+  toggleComboInput('assignedToSelect', 'assignedToCustom', 'assigned_to');
+}
+
+function toggleEndUserInput() {
+  toggleComboInput('endUserSelect', 'endUserCustom', 'end_user');
+}
+
+function toggleLocationInput() {
+  toggleComboInput('locationSelect', 'locationCustom', 'location');
+}
+
+function toggleCurrentLocationInput() {
+  toggleComboInput('currentLocationSelect', 'currentLocationCustom', 'current_location');
+}
+
+// Generic toggle function
+function toggleComboInput(selectId, inputId, fieldName) {
+  const select = document.getElementById(selectId);
+  const customInput = document.getElementById(inputId);
+  
+  if (select.value === 'other') {
+    customInput.style.display = 'block';
+    customInput.name = fieldName;
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+    customInput.name = '';
+    if (select.value) {
+      // Create a hidden input to send the selected value
+      const hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.name = fieldName;
+      hiddenInput.value = select.value;
+      select.parentNode.appendChild(hiddenInput);
+    }
+  }
+}
+
+// Handle form submission for all combo boxes
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.querySelector('form');
+  const comboBoxes = [
+    { selectId: 'projectNameSelect', inputId: 'projectNameCustom', fieldName: 'project_name' },
+    { selectId: 'assignedToSelect', inputId: 'assignedToCustom', fieldName: 'assigned_to' },
+    { selectId: 'endUserSelect', inputId: 'endUserCustom', fieldName: 'end_user' },
+    { selectId: 'locationSelect', inputId: 'locationCustom', fieldName: 'location' },
+    { selectId: 'currentLocationSelect', inputId: 'currentLocationCustom', fieldName: 'current_location' }
+  ];
+  
+  if (form) {
+    form.addEventListener('submit', function() {
+      comboBoxes.forEach(combo => {
+        const select = document.getElementById(combo.selectId);
+        const customInput = document.getElementById(combo.inputId);
+        
+        if (select && customInput) {
+          // Remove any existing hidden inputs for this field
+          const existingHidden = document.querySelectorAll(`input[name="${combo.fieldName}"][type="hidden"]`);
+          existingHidden.forEach(input => input.remove());
+          
+          if (select.value && select.value !== 'other') {
+            // Use selected value
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = combo.fieldName;
+            hiddenInput.value = select.value;
+            form.appendChild(hiddenInput);
+            customInput.name = '';
+          } else if (select.value === 'other') {
+            // Use custom input value
+            customInput.name = combo.fieldName;
+          }
+        }
+      });
+    });
+  }
 });
 </script>
 
