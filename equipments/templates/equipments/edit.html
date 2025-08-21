@@ -94,6 +94,7 @@
               <option value="other">Other (Type new)</option>
             </select>
             <input type="text" name="assigned_to" id="assignedToCustom" class="form-control form-control-sm" value="{% if equipment.assigned_to and equipment.assigned_to not in existing_assigned_to %}{{ equipment.assigned_to }}{% endif %}" placeholder="Type new assignee name" style="display: {% if equipment.assigned_to and equipment.assigned_to not in existing_assigned_to %}block{% else %}none{% endif %};">
+            <textarea name="assignment_reason" id="assignmentReasonField" class="form-control form-control-sm mt-2" rows="2" placeholder="Reason for assignment change (optional)" style="display: none; background-color: #d4edda; border-color: #28a745;">{{ equipment.assignment_reason }}</textarea>
           </div>
           <div class="col-md-6">
             <label class="form-label small">End User</label>
@@ -105,6 +106,7 @@
               <option value="other">Other (Type new)</option>
             </select>
             <input type="text" name="end_user" id="endUserCustom" class="form-control form-control-sm" value="{% if equipment.end_user and equipment.end_user not in existing_end_users %}{{ equipment.end_user }}{% endif %}" placeholder="Type new end user name" style="display: {% if equipment.end_user and equipment.end_user not in existing_end_users %}block{% else %}none{% endif %};">
+            <textarea name="user_change_reason" id="userChangeReasonField" class="form-control form-control-sm mt-2" rows="2" placeholder="Reason for end user change (optional)" style="display: none; background-color: #d4edda; border-color: #28a745;">{{ equipment.user_change_reason }}</textarea>
           </div>
           <div class="col-md-6">
             <label class="form-label small">Deployment Location</label>
@@ -116,6 +118,7 @@
               <option value="other">Other (Type new)</option>
             </select>
             <input type="text" name="location" id="locationCustom" class="form-control form-control-sm" value="{% if equipment.location and equipment.location not in existing_locations %}{{ equipment.location }}{% endif %}" placeholder="Type new deployment location" style="display: {% if equipment.location and equipment.location not in existing_locations %}block{% else %}none{% endif %};">
+            <textarea name="location_change_reason" id="locationChangeReasonField" class="form-control form-control-sm mt-2" rows="2" placeholder="Reason for location change (optional)" style="display: none; background-color: #d4edda; border-color: #28a745;">{{ equipment.location_change_reason }}</textarea>
           </div>
           <div class="col-md-6">
             <label class="form-label small">Current Location</label>
@@ -127,6 +130,7 @@
               <option value="other">Other (Type new)</option>
             </select>
             <input type="text" name="current_location" id="currentLocationCustom" class="form-control form-control-sm" value="{% if equipment.current_location and equipment.current_location not in existing_current_locations %}{{ equipment.current_location }}{% endif %}" placeholder="Type new current location" style="display: {% if equipment.current_location and equipment.current_location not in existing_current_locations %}block{% else %}none{% endif %};">
+            <textarea name="current_location_reason" id="currentLocationReasonField" class="form-control form-control-sm mt-2" rows="2" placeholder="Reason for current location change (optional)" style="display: none; background-color: #d4edda; border-color: #28a745;">{{ equipment.current_location_reason }}</textarea>
           </div>
 
           <!-- 📁 Classification -->
@@ -332,18 +336,58 @@ function toggleProjectNameInput() {
 
 function toggleAssignedToInput() {
   toggleComboInput('assignedToSelect', 'assignedToCustom', 'assigned_to');
+  // Show/hide assignment reason field
+  const select = document.getElementById('assignedToSelect');
+  const reasonField = document.getElementById('assignmentReasonField');
+  if (select.value && select.value !== '') {
+    reasonField.style.display = 'block';
+    reasonField.value = ''; // Clear existing reason when dropdown changes
+  } else {
+    reasonField.style.display = 'none';
+    reasonField.value = ''; // Clear the reason when hiding
+  }
 }
 
 function toggleEndUserInput() {
   toggleComboInput('endUserSelect', 'endUserCustom', 'end_user');
+  // Show/hide end user change reason field
+  const select = document.getElementById('endUserSelect');
+  const reasonField = document.getElementById('userChangeReasonField');
+  if (select.value && select.value !== '') {
+    reasonField.style.display = 'block';
+    reasonField.value = ''; // Clear existing reason when dropdown changes
+  } else {
+    reasonField.style.display = 'none';
+    reasonField.value = ''; // Clear the reason when hiding
+  }
 }
 
 function toggleLocationInput() {
   toggleComboInput('locationSelect', 'locationCustom', 'location');
+  // Show/hide location change reason field
+  const select = document.getElementById('locationSelect');
+  const reasonField = document.getElementById('locationChangeReasonField');
+  if (select.value && select.value !== '') {
+    reasonField.style.display = 'block';
+    reasonField.value = ''; // Clear existing reason when dropdown changes
+  } else {
+    reasonField.style.display = 'none';
+    reasonField.value = ''; // Clear the reason when hiding
+  }
 }
 
 function toggleCurrentLocationInput() {
   toggleComboInput('currentLocationSelect', 'currentLocationCustom', 'current_location');
+  // Show/hide current location change reason field
+  const select = document.getElementById('currentLocationSelect');
+  const reasonField = document.getElementById('currentLocationReasonField');
+  if (select.value && select.value !== '') {
+    reasonField.style.display = 'block';
+    reasonField.value = ''; // Clear existing reason when dropdown changes
+  } else {
+    reasonField.style.display = 'none';
+    reasonField.value = ''; // Clear the reason when hiding
+  }
 }
 
 // Generic toggle function
@@ -371,6 +415,24 @@ function toggleComboInput(selectId, inputId, fieldName) {
 
 // Handle form submission for all combo boxes
 document.addEventListener('DOMContentLoaded', function() {
+  // Initialize reason field visibility on page load - keep all reason fields hidden initially
+  const fieldsToCheck = [
+    { selectId: 'assignedToSelect', reasonFieldId: 'assignmentReasonField' },
+    { selectId: 'endUserSelect', reasonFieldId: 'userChangeReasonField' },
+    { selectId: 'locationSelect', reasonFieldId: 'locationChangeReasonField' },
+    { selectId: 'currentLocationSelect', reasonFieldId: 'currentLocationReasonField' }
+  ];
+  
+  fieldsToCheck.forEach(field => {
+    const select = document.getElementById(field.selectId);
+    const reasonField = document.getElementById(field.reasonFieldId);
+    if (select && reasonField) {
+      // Always hide reason fields on page load and clear any existing content
+      reasonField.style.display = 'none';
+      reasonField.value = '';
+    }
+  });
+
   const form = document.querySelector('form');
   const comboBoxes = [
     { selectId: 'projectNameSelect', inputId: 'projectNameCustom', fieldName: 'project_name' },

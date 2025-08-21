@@ -1017,6 +1017,7 @@ $(document).on('change', '.column-select', function () {
                   <th>Field</th>
                   <th>Old Value</th>
                   <th>New Value</th>
+                  <th>Reason</th>
                   <th>Changed By</th>
                 </tr>
               </thead>
@@ -1030,6 +1031,7 @@ $(document).on('change', '.column-select', function () {
               <td>${h.field_changed}</td>
               <td class="text-danger">${h.old_value || 'None'}</td>
               <td class="text-success">${h.new_value || 'None'}</td>
+              <td class="text-warning">${h.reason || 'N/A'}</td>
               <td>${h.changed_by}</td>
             </tr>
           `;

@@ -70,6 +70,12 @@ class Equipment(models.Model):
     location = models.CharField(max_length=100, blank=True, null=True, verbose_name="Location")
     current_location = models.CharField(max_length=100, blank=True, null=True, verbose_name="Current Location")
 
+    # Reason fields for tracking changes
+    assignment_reason = models.TextField(blank=True, null=True, verbose_name="Assignment Change Reason")
+    user_change_reason = models.TextField(blank=True, null=True, verbose_name="End User Change Reason")
+    location_change_reason = models.TextField(blank=True, null=True, verbose_name="Location Change Reason")
+    current_location_reason = models.TextField(blank=True, null=True, verbose_name="Current Location Change Reason")
+
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name="Category", default=1)
     status = models.ForeignKey(Status, on_delete=models.CASCADE, verbose_name="Status", default=1)
 
@@ -136,6 +142,7 @@ class EquipmentHistory(models.Model):
     field_changed = models.CharField(max_length=255)  # e.g. 'assigned_to', 'item_name', etc.
     old_value = models.TextField(blank=True, null=True)
     new_value = models.TextField(blank=True, null=True)
+    reason = models.TextField(blank=True, null=True, verbose_name="Change Reason")  # New field for reasons
     action = models.CharField(max_length=50, default='Edited')  # e.g. 'Edited', 'Reassigned', etc.
     changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     changed_at = models.DateTimeField(auto_now_add=True)

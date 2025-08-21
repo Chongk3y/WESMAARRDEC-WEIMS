@@ -397,6 +397,12 @@ def processaddequipment(request):
         user_image = request.FILES.get('user_image', 'equipment_pic/image.jpg')
         order_receipt = request.FILES.get('order_receipt', None)
         replacement_documents = request.FILES.getlist('replacement_documents')
+        
+        # Handle reason fields (usually empty for new equipment)
+        assignment_reason = request.POST.get('assignment_reason') or None
+        user_change_reason = request.POST.get('user_change_reason') or None
+        location_change_reason = request.POST.get('location_change_reason') or None
+        current_location_reason = request.POST.get('current_location_reason') or None
 
         # Field validations (keep as is)
         # ...existing validation code...
@@ -456,6 +462,10 @@ def processaddequipment(request):
                 status_id=status_id,
                 damage_reason=damage_reason,
                 lost_remarks=lost_remarks,
+                assignment_reason=assignment_reason,
+                user_change_reason=user_change_reason,
+                location_change_reason=location_change_reason,
+                current_location_reason=current_location_reason,
                 created_by=request.user,
                 updated_by=request.user,
                 order_receipt=order_receipt 
@@ -487,7 +497,7 @@ def edit_equipment(request, id):
     users = User.objects.all()
 
     if request.method == 'POST':
-        # Capture current values before changes
+        # Capture current values before changes (excluding reason fields to avoid tracking them)
         original = {
             'item_propertynum': equipment.item_propertynum,
             'item_name': equipment.item_name,
@@ -507,6 +517,11 @@ def edit_equipment(request, id):
             'status_id': equipment.status_id,
             'damage_reason': equipment.damage_reason,
             'lost_remarks': equipment.lost_remarks,
+            # Reason fields excluded from history tracking
+            # 'assignment_reason': equipment.assignment_reason,
+            # 'user_change_reason': equipment.user_change_reason,
+            # 'location_change_reason': equipment.location_change_reason,
+            # 'current_location_reason': equipment.current_location_reason,
         }
 
         equipment.item_propertynum = request.POST.get('item_propertynum')
@@ -532,6 +547,13 @@ def edit_equipment(request, id):
         equipment.current_location = request.POST.get('current_location')
         equipment.project_name = request.POST.get('project_name') or None
         equipment.end_user = request.POST.get('end_user') or None
+        
+        # Handle reason fields
+        equipment.assignment_reason = request.POST.get('assignment_reason') or None
+        equipment.user_change_reason = request.POST.get('user_change_reason') or None
+        equipment.location_change_reason = request.POST.get('location_change_reason') or None
+        equipment.current_location_reason = request.POST.get('current_location_reason') or None
+        
         equipment.emp_id = request.POST.get('emp_id')
         equipment.category_id = request.POST.get('category_id')
         equipment.status_id = request.POST.get('status_id')
@@ -608,43 +630,61 @@ def edit_equipment(request, id):
             'status_id': 'Status',
             'damage_reason': 'Damage Reason',
             'lost_remarks': 'Lost Remarks',
+            # Reason field labels removed since they're not tracked in history
+            # 'assignment_reason': 'Assignment Change Reason',
+            # 'user_change_reason': 'End User Change Reason',
+            # 'location_change_reason': 'Location Change Reason',
+            # 'current_location_reason': 'Current Location Change Reason',
         }
         for field, old in original.items():
             new = getattr(equipment, field)
-            # For ForeignKeys, get display value
-            if field == 'category_id' and old != new:
+            
+            # Skip if values are the same
+            if old == new:
+                continue
+                
+            # Initialize variables
+            old_val = ''
+            new_val = ''
+            reason = None
+            
+            # Get the appropriate reason for specific fields
+            if field == 'assigned_to':
+                reason = equipment.assignment_reason
+            elif field == 'end_user':
+                reason = equipment.user_change_reason
+            elif field == 'location':
+                reason = equipment.location_change_reason
+            elif field == 'current_location':
+                reason = equipment.current_location_reason
+            
+            # Handle different field types
+            if field == 'category_id':
                 old_val = str(Category.objects.get(pk=old).name) if old else ''
                 new_val = str(equipment.category.name) if equipment.category else ''
-            elif field == 'status_id' and old != new:
+            elif field == 'status_id':
                 old_val = str(Status.objects.get(pk=old).name) if old else ''
                 new_val = str(equipment.status.name) if equipment.status else ''
-            elif field == 'emp_id' and old != new:
+            elif field == 'emp_id':
                 old_val = str(User.objects.get(pk=old).get_full_name()) if old else ''
                 new_val = str(equipment.emp.get_full_name()) if equipment.emp else ''
-            elif field == 'item_purdate' and old != new:
+            elif field == 'item_purdate':
                 old_val = old.strftime('%Y-%m-%d') if old else ''
                 new_val = new.strftime('%Y-%m-%d') if new else ''
             elif field == 'item_amount':
                 try:
-                    old_val = float(old) if old not in (None, '', 'None') else 0.0
+                    old_amount = float(old) if old not in (None, '', 'None') else 0.0
                 except Exception:
-                    old_val = 0.0
+                    old_amount = 0.0
                 try:
-                    new_val = float(new) if new not in (None, '', 'None') else 0.0
+                    new_amount = float(new) if new not in (None, '', 'None') else 0.0
                 except Exception:
-                    new_val = 0.0
-                old_val_str = f"₱{old_val:,.2f}" if old not in ('', None, 'None') else ''
-                new_val_str = f"₱{new_val:,.2f}" if new not in ('', None, 'None') else ''
-                if old_val != new_val:
-                    EquipmentHistory.objects.create(
-                        equipment=equipment,
-                        field_changed=field_labels.get(field, field),
-                        old_value=old_val_str,
-                        new_value=new_val_str,
-                        action='Edited',
-                        changed_by=request.user
-                    )
-                continue
+                    new_amount = 0.0
+                old_val = f"₱{old_amount:,.2f}" if old not in ('', None, 'None') else ''
+                new_val = f"₱{new_amount:,.2f}" if new not in ('', None, 'None') else ''
+                # Skip if amounts are the same
+                if old_amount == new_amount:
+                    continue
             else:
                 # Normalize for text fields: treat None, '', and 'None' as equivalent, and strip whitespace
                 def norm(val):
@@ -653,12 +693,18 @@ def edit_equipment(request, id):
                     return str(val).strip()
                 old_val = norm(old)
                 new_val = norm(new)
+                # Skip if normalized values are the same
+                if old_val == new_val:
+                    continue
+            
+            # Create history record if values are different
             if old_val != new_val:
                 EquipmentHistory.objects.create(
                     equipment=equipment,
                     field_changed=field_labels.get(field, field),
                     old_value=old_val,
                     new_value=new_val,
+                    reason=reason,
                     action='Edited',
                     changed_by=request.user
                 )
@@ -1585,6 +1631,7 @@ def equipment_history_json(request, equipment_id):
             'field_changed': h.field_changed,
             'old_value': h.old_value,
             'new_value': h.new_value,
+            'reason': h.reason if h.reason else 'N/A',  # Show reason or N/A
             'changed_by': h.changed_by.get_full_name() or h.changed_by.username
         }
         for h in history
