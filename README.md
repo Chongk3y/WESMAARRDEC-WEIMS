@@ -432,22 +432,6 @@ Located in `WESMAARRDEC_WEB/settings.py`:
 
 ---
 
-## 📞 Support
-
-For issues, questions, or contributions:
-
-- **Repository**: [GitHub - WESMAARRDEC](https://github.com/Ginalenn/WESMAARRDEC)
-- **Branch**: `weims-jazz`
-- **Issues**: Use GitHub Issues for bug reports and feature requests
-
----
-
-## 📄 License
-
-[Specify your license here - e.g., MIT, GPL, Proprietary, etc.]
-
----
-
 ## 🎯 Version History
 
 - **Current Version**: 1.0.0
