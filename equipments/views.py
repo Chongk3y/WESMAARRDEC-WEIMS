@@ -157,32 +157,49 @@ def equipment_table_json(request):
                     </li>
                 '''
                 if is_admin(request.user) or is_superadmin(request.user):
+                    safe_name = (eq.item_name or 'Unknown Equipment').replace("'", "\\'")
+                    safe_property = eq.item_propertynum or 'N/A'
                     actions += f'''
                     <li>
-                    <a class="dropdown-item" href="/weims/delete/{eq.id}/" onclick="return confirm('Are you sure?');">
+                    <a class="dropdown-item" href="#" onclick="showIndividualDeleteConfirm({eq.id}, '{safe_name} - #{safe_property}', '/weims/delete/{eq.id}/');">
                         <i class="bi bi-trash"></i> Delete
                     </a>
                     </li>
                     '''
                 if is_admin(request.user) or is_superadmin(request.user) or is_encoder(request.user):
+                    safe_name = (eq.item_name or 'Unknown Equipment').replace("'", "\\'")
+                    safe_property = eq.item_propertynum or 'N/A'
                     actions += f'''
                     <li>
-                    <a class="dropdown-item" href="/weims/archive/{eq.id}/" onclick="return confirm('Archive this equipment?');">
+                    <a class="dropdown-item" href="#" onclick="showIndividualArchiveConfirm({eq.id}, '{safe_name} - #{safe_property}', '/weims/archive/{eq.id}/');">
                         <i class="bi bi-archive"></i> Archive
                     </a>
                     </li>
                     '''
                 if not eq.is_returned:
-                    actions += f'''
-                    <li>
-                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#returnModal" 
-                            data-eqid="{eq.id}" 
-                            data-eqname="{eq.item_name or 'N/A'}" 
-                            data-eqproperty="{eq.item_propertynum or 'N/A'}">
-                        <i class="bi bi-arrow-90deg-left"></i> Return
-                    </button>
-                    </li>
-                    '''
+                    if eq.status and eq.status.name == 'Lost':
+                        # Show disabled button with tooltip for lost equipment
+                        actions += f'''
+                        <li>
+                        <button type="button" class="dropdown-item disabled" disabled 
+                                data-bs-toggle="tooltip" data-bs-placement="top" 
+                                title="Lost equipment cannot be returned">
+                            <i class="bi bi-arrow-90deg-left text-muted"></i> Return
+                        </button>
+                        </li>
+                        '''
+                    else:
+                        # Show normal return button
+                        actions += f'''
+                        <li>
+                        <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#returnModal" 
+                                data-eqid="{eq.id}" 
+                                data-eqname="{eq.item_name or 'N/A'}" 
+                                data-eqproperty="{eq.item_propertynum or 'N/A'}">
+                            <i class="bi bi-arrow-90deg-left"></i> Return
+                        </button>
+                        </li>
+                        '''
                 actions += '''
                 </ul>
                 </div>
@@ -766,7 +783,7 @@ def delete_equipment(request, id):
 @login_required
 @secretariat_required
 def dashboard(request):
-    total_equipments = Equipment.objects.filter(is_archived=False, is_returned=False).count()
+    total_equipments = Equipment.objects.filter(is_returned=False).count()
     total_archived = Equipment.objects.filter(is_archived=True).count()
     total_returned = Equipment.objects.filter(is_returned=True).count()
 
@@ -1266,6 +1283,120 @@ def bulk_update_equipment(request):
             summary=f"Bulk updated {len(equipment_names)} equipment(s): {equipment_list} - Changed: {', '.join(update_details)}"
         )
     return JsonResponse({'success': True})
+
+@login_required
+@role_required_with_feedback(is_admin_superadmin_encoder)
+def bulk_archive_equipment(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed.'}, status=405)
+    
+    ids = request.POST.get('equipment_ids', '')
+    if not ids:
+        return JsonResponse({'error': 'No equipment selected.'}, status=400)
+    
+    id_list = [int(i) for i in ids.split(',') if i.isdigit()]
+    qs = Equipment.objects.filter(id__in=id_list, is_archived=False)  # Only archive non-archived equipment
+    
+    if not qs.exists():
+        return JsonResponse({'error': 'No valid equipment found to archive.'}, status=400)
+    
+    # Get equipment details for logging before archiving
+    equipment_names = list(qs.values_list('item_name', 'item_propertynum'))
+    archived_count = qs.count()
+    
+    # Archive the equipment
+    qs.update(is_archived=True)
+    
+    # Create history log entries for each equipment
+    for equipment in qs:
+        EquipmentHistory.objects.create(
+            equipment=equipment,
+            field_changed='is_archived',
+            old_value='False',
+            new_value='True',
+            changed_by=request.user,
+            change_reason='Bulk archive operation'
+        )
+    
+    # Create a single action log entry for the bulk operation
+    equipment_list = ', '.join([f"{name} (#{prop})" for name, prop in equipment_names[:5]])
+    if len(equipment_names) > 5:
+        equipment_list += f" and {len(equipment_names) - 5} more"
+    
+    EquipmentActionLog.objects.create(
+        equipment=None,  # Bulk action, no single equipment
+        action='archive',
+        user=request.user,
+        summary=f"Bulk archived {archived_count} equipment(s): {equipment_list}"
+    )
+    
+    return JsonResponse({
+        'success': True, 
+        'archived_count': archived_count,
+        'message': f'Successfully archived {archived_count} equipment(s).'
+    })
+
+@login_required
+@role_required_with_feedback(is_admin_or_superadmin)  # Only admin and superadmin can bulk delete
+def bulk_delete_equipment(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method allowed.'}, status=405)
+    
+    ids = request.POST.get('equipment_ids', '')
+    if not ids:
+        return JsonResponse({'error': 'No equipment selected.'}, status=400)
+    
+    id_list = [int(i) for i in ids.split(',') if i.isdigit()]
+    qs = Equipment.objects.filter(id__in=id_list)
+    
+    if not qs.exists():
+        return JsonResponse({'error': 'No valid equipment found to delete.'}, status=400)
+    
+    # Get equipment details for logging before deletion
+    equipment_details = []
+    for equipment in qs:
+        equipment_details.append({
+            'id': equipment.id,
+            'name': equipment.item_name or 'Unknown',
+            'property_num': equipment.item_propertynum or 'N/A',
+            'category': equipment.category.name if equipment.category else 'None',
+            'status': equipment.status.name if equipment.status else 'None',
+            'end_user': equipment.end_user or 'None',
+            'assigned_to': equipment.assigned_to or 'None'
+        })
+    
+    deleted_count = len(equipment_details)
+    
+    # Create history logs before deletion (since we can't log after deletion)
+    for eq_detail in equipment_details:
+        # Create a final action log for each equipment being deleted
+        EquipmentActionLog.objects.create(
+            equipment=None,  # Equipment will be deleted, so no reference
+            action='delete',
+            user=request.user,
+            summary=f"Equipment PERMANENTLY DELETED - ID: {eq_detail['id']}, Name: {eq_detail['name']}, Property #: {eq_detail['property_num']}, Category: {eq_detail['category']}, Status: {eq_detail['status']}, End User: {eq_detail['end_user']}, Assigned To: {eq_detail['assigned_to']}"
+        )
+    
+    # Create a single bulk action log entry
+    equipment_list = ', '.join([f"{eq['name']} (#{eq['property_num']})" for eq in equipment_details[:5]])
+    if len(equipment_details) > 5:
+        equipment_list += f" and {len(equipment_details) - 5} more"
+    
+    EquipmentActionLog.objects.create(
+        equipment=None,  # Bulk action, no single equipment
+        action='bulk_delete',
+        user=request.user,
+        summary=f"BULK HARD DELETE - Permanently deleted {deleted_count} equipment(s): {equipment_list}"
+    )
+    
+    # Now perform the actual deletion
+    qs.delete()
+    
+    return JsonResponse({
+        'success': True, 
+        'deleted_count': deleted_count,
+        'message': f'Successfully deleted {deleted_count} equipment(s) permanently.'
+    })
 
 @login_required
 @role_required_with_feedback(is_viewer_or_above)
@@ -1995,6 +2126,10 @@ def generate_report(request):
         if form.cleaned_data['assigned_to']:
             equipments = equipments.filter(assigned_to__icontains=form.cleaned_data['assigned_to'])
 
+    # Calculate total equipment value (needs to be done before exports)
+    from django.db.models import Sum
+    total_amount = equipments.aggregate(total=Sum('item_amount'))['total'] or 0
+
     # Handle column selection
     if request.GET.get('columns') or form.is_valid():
         # User has made column selections or form is valid with data
@@ -2080,7 +2215,8 @@ def generate_report(request):
                 filename="equipment_report.docx",
                 orientation=orientation,
                 table_style=table_style,
-                font_size=font_size
+                font_size=font_size,
+                total_amount=total_amount
             )
             
             # Debug: Confirm document was created
@@ -2243,6 +2379,7 @@ def generate_report(request):
     created_by_users = User.objects.filter(equipment_created__isnull=False).distinct().order_by('username')
     updated_by_users = User.objects.filter(equipment_updated__isnull=False).distinct().order_by('username')
     archived_by_users = User.objects.filter(archived_equipments__isnull=False).distinct().order_by('username')
+    
     context = {
         'form': form,
         'equipments': page_obj,  # Changed from equipments to page_obj
@@ -2268,6 +2405,7 @@ def generate_report(request):
         'created_by_users': created_by_users,
         'updated_by_users': updated_by_users,
         'archived_by_users': archived_by_users,
+        'total_amount': total_amount,
     }
     return render(request, 'reports/generate_report.html', context)
 

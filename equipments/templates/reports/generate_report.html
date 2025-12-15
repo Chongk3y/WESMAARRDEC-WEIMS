@@ -999,7 +999,34 @@
                 </tr>
               {% endfor %}
             </tbody>
+            {% if 'item_amount' in selected_columns %}
+            <tfoot class="table-secondary">
+              <tr>
+                <td colspan="{{ selected_columns|length|add:'-1' }}" class="text-end fw-bold">
+                  Total Equipment Value:
+                </td>
+                <td class="text-center fw-bold">
+                  ₱{{ total_amount|floatformat:2|intcomma }}
+                </td>
+              </tr>
+            </tfoot>
+            {% endif %}
           </table>
+        </div>
+
+        <!-- Total Equipment Value -->
+        <div class="mt-4 p-3 bg-light border rounded">
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-0"><strong>Total Equipment Value:</strong> ₱{{ total_amount|floatformat:2|intcomma }}</p>
+            </div>
+            <div class="col-md-6 text-end">
+              <small class="text-muted">
+                Generated on: {{ "now"|date:"F j, Y g:i A" }}<br>
+                By: {{ request.user.get_full_name|default:request.user.username }}
+              </small>
+            </div>
+          </div>
         </div>
 
         <!-- Pagination Controls -->

@@ -35,7 +35,7 @@ except ImportError:
     Table = None
 
 
-def add_equipment_table_to_doc(doc, equipments, selected_columns, column_labels, table_style='Table Grid', font_size=10):
+def add_equipment_table_to_doc(doc, equipments, selected_columns, column_labels, table_style='Table Grid', font_size=10, total_amount=0):
     """
     Add equipment data table to the Word document with customizable styling
     """
@@ -43,6 +43,15 @@ def add_equipment_table_to_doc(doc, equipments, selected_columns, column_labels,
     p = doc.add_paragraph()
     p.add_run(f"Total Records: {len(equipments)}").bold = True
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Add total equipment value right below total records
+    p2 = doc.add_paragraph()
+    total_run = p2.add_run(f"Total Equipment Value: ₱{total_amount:,.2f}")
+    total_run.bold = True
+    if Pt:
+        total_run.font.size = Pt(font_size + 1)
+        total_run.font.name = 'Arial'
+    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     # Add some spacing
     doc.add_paragraph()
@@ -158,7 +167,7 @@ def replace_placeholders_in_doc(doc, context_data):
 
 
 def generate_word_report_from_template(equipments, selected_columns, column_labels, filename="equipment_report.docx", 
-                                      orientation="portrait", table_style="table_grid", font_size=10):
+                                      orientation="portrait", table_style="table_grid", font_size=10, total_amount=0):
     """
     Generate a Word document report using WESMAARRDEC template with customizable options
     """
@@ -227,7 +236,7 @@ def generate_word_report_from_template(equipments, selected_columns, column_labe
     doc.add_paragraph()
     
     # Add the equipment table with custom styling
-    add_equipment_table_to_doc(doc, equipments, selected_columns, column_labels, table_style, font_size)
+    add_equipment_table_to_doc(doc, equipments, selected_columns, column_labels, table_style, font_size, total_amount)
     
     return doc
 
@@ -238,22 +247,28 @@ def create_word_response(doc, filename="equipment_report.docx"):
     """
     # Ensure filename has .docx extension
     if not filename.endswith('.docx'):
-        filename = filename.replace('.xlsx', '.docx').replace('.xls', '.docx')
+        # Remove any Excel extensions and add .docx
+        filename = filename.replace('.xlsx', '').replace('.xls', '')
         if not filename.endswith('.docx'):
             filename += '.docx'
     
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     )
-    # Use proper quotes around filename to prevent Excel interpretation
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     
-    # Force download behavior and prevent Excel interpretation
+    # Set proper headers to force Word document download and prevent Excel interpretation
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    response['X-Content-Type-Options'] = 'nosniff'
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response['Pragma'] = 'no-cache'
     response['Expires'] = '0'
     response['Content-Description'] = 'File Transfer'
     response['Content-Transfer-Encoding'] = 'binary'
+    
+    # Additional headers to prevent Excel association
+    response['X-Download-Options'] = 'noopen'
+    response['X-Frame-Options'] = 'DENY'
     
     # Debug output
     print(f"DEBUG: Creating Word response with content-type: application/vnd.openxmlformats-officedocument.wordprocessingml.document")

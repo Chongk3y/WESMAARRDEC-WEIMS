@@ -52,10 +52,29 @@
         
         <!-- Apply Button -->
         <div class="col-12 col-sm-auto">
-          <button type="submit" class="btn btn-outline-primary btn-sm w-100 w-sm-auto">
+          <button type="submit" class="btn btn-outline-primary btn-sm w-100 w-sm-auto" disabled
+                  title="Apply status or category changes to multiple selected equipment at once">
             Apply to Selected
           </button>
         </div>
+
+        <!-- Bulk Archive Button -->
+        <div class="col-12 col-sm-auto">
+          <button type="button" id="bulkArchiveBtn" class="btn btn-outline-warning btn-sm w-100 w-sm-auto" disabled
+                  title="Archive multiple selected equipment to move them to archived status">
+            <i class="bi bi-archive text-muted"></i> Archive Selected
+          </button>
+        </div>
+
+        <!-- Bulk Delete Button - Admin/Superadmin Only -->
+        {% if is_admin or is_superadmin %}
+        <div class="col-12 col-sm-auto">
+          <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger btn-sm w-100 w-sm-auto" disabled
+                  title="Permanently delete multiple selected equipment from the system">
+            <i class="bi bi-trash text-muted"></i> Delete Selected
+          </button>
+        </div>
+        {% endif %}
 
       </div>
     </form>
@@ -64,16 +83,20 @@
 
   <!-- FILTER & ORDERING TOOLS -->
   <div class="col-md-auto d-flex flex-wrap gap-2">
-    <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#advancedFilterModal">
+    <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#advancedFilterModal"
+            title="Click to open advanced filtering options. Search equipment by specific criteria like status, category, date ranges, and more">
       <i class="bi bi-funnel"></i> Filter
     </button>
 
-    <button id="toggleOrderBtn" class="btn btn-outline-secondary btn-sm">
+    <button id="toggleOrderBtn" class="btn btn-outline-secondary btn-sm"
+            data-bs-toggle="tooltip" data-bs-placement="top" 
+            title="Click to switch between showing newest equipment first or oldest equipment first in the table">
       Show Oldest First
     </button>
 
     <div class="dropdown">
-      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="columnVisibilityDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="columnVisibilityDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+              title="Click to show or hide table columns. Check/uncheck items to customize which information is displayed in the equipment table">
         Columns
       </button>
       <ul class="dropdown-menu" id="columnVisibilityMenu" aria-labelledby="columnVisibilityDropdown">
@@ -88,16 +111,22 @@
     <form action="{% url 'equipments:import_excel' %}" method="post" enctype="multipart/form-data" id="importExcelForm">
       {% csrf_token %}
       <input type="file" name="excel_file" accept=".xlsx,.xls" style="display:none;" id="importExcelInput" onchange="this.form.submit()">
-      <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('importExcelInput').click();">
+      <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('importExcelInput').click();"
+              data-bs-toggle="tooltip" data-bs-placement="top" 
+              title="Click to select an Excel file (.xlsx or .xls) to import equipment data. File will be uploaded and processed automatically">
         <i class="bi bi-upload"></i> Import Excel
       </button>
     </form>
 
-    <a href="{% url 'equipments:export_excel' %}" class="btn btn-outline-info btn-sm">
+    <a href="{% url 'equipments:export_excel' %}" class="btn btn-outline-info btn-sm"
+       data-bs-toggle="tooltip" data-bs-placement="top" 
+       title="Download all equipment data as an Excel file. Includes currently filtered results if any filters are applied">
       <i class="bi bi-file-earmark-excel"></i> Export Excel
     </a>
 
-    <a href="{% url 'equipments:add' %}" class="btn btn-outline-success btn-sm">
+    <a href="{% url 'equipments:add' %}" class="btn btn-outline-success btn-sm"
+       data-bs-toggle="tooltip" data-bs-placement="top" 
+       title="Click to open the form for adding new equipment to the system">
       <i class="bi bi-plus-circle"></i> Add
     </a>
   </div>
@@ -227,7 +256,7 @@
         <div class="modal-footer">
           <button type="submit" class="btn btn-primary">Submit Return</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        </div>
+        </div>  
       </div>
     </form>
   </div>
@@ -327,6 +356,193 @@
   </div>
 </div>
 
+<!-- Bulk Archive Confirmation Modal -->
+<div class="modal fade" id="bulkArchiveConfirmModal" tabindex="-1" aria-labelledby="bulkArchiveConfirmLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="bulkArchiveConfirmLabel">
+          <i class="bi bi-archive me-2"></i>Confirm Bulk Archive
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle text-warning me-3" style="font-size: 2rem;"></i>
+          <div>
+            <h6 class="fw-bold">Archive Selected Equipment</h6>
+            <p class="mb-2">You are about to archive <span id="bulkArchiveCount" class="fw-bold text-warning">0</span> equipment(s).</p>
+            <p class="text-muted small mb-0">Archived equipment will be moved to archived status and can be unarchived later if needed.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="confirmBulkArchive">
+          <i class="bi bi-archive me-1"></i>Archive Equipment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Delete Confirmation Modal -->
+<div class="modal fade" id="bulkDeleteConfirmModal" tabindex="-1" aria-labelledby="bulkDeleteConfirmLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="bulkDeleteConfirmLabel">
+          <i class="bi bi-exclamation-triangle me-2"></i>⚠️ DANGER: Permanent Deletion
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-trash text-danger me-3" style="font-size: 2rem;"></i>
+          <div>
+            <h6 class="fw-bold text-danger">Permanently Delete Selected Equipment</h6>
+            <p class="mb-2">You are about to <strong class="text-danger">PERMANENTLY DELETE</strong> <span id="bulkDeleteCount" class="fw-bold text-danger">0</span> equipment(s).</p>
+            <div class="alert alert-danger py-2 px-3">
+              <small class="fw-bold">⚠️ WARNING: This action CANNOT be undone!</small><br>
+              <small>All equipment data, history, and associated documents will be permanently removed from the system.</small>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="confirmDeletionCheckbox">
+              <label class="form-check-label text-danger fw-bold" for="confirmDeletionCheckbox">
+                I understand this action is permanent and cannot be undone
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmBulkDelete" disabled>
+          <i class="bi bi-trash me-1"></i>DELETE PERMANENTLY
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Update Confirmation Modal -->
+<div class="modal fade" id="bulkUpdateConfirmModal" tabindex="-1" aria-labelledby="bulkUpdateConfirmLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="bulkUpdateConfirmLabel">
+          <i class="bi bi-pencil-square text-warning me-2"></i>Confirm Bulk Update
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning d-flex align-items-center mb-3">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          <div>
+            <strong>Bulk Update Action</strong><br>
+            You are about to update <strong id="bulkUpdateCount">0</strong> selected equipment items.
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <strong>Changes to apply:</strong>
+          <ul class="list-unstyled mt-2 mb-0">
+            <li id="statusChangeInfo" class="text-muted" style="display: none;">
+              <i class="bi bi-arrow-right me-1"></i>Status: <span class="fw-bold" id="newStatusName"></span>
+            </li>
+            <li id="categoryChangeInfo" class="text-muted" style="display: none;">
+              <i class="bi bi-arrow-right me-1"></i>Category: <span class="fw-bold" id="newCategoryName"></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="confirmBulkUpdate">
+          <i class="bi bi-pencil-square me-1"></i>UPDATE EQUIPMENT
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Individual Archive Confirmation Modal -->
+<div class="modal fade" id="individualArchiveConfirmModal" tabindex="-1" aria-labelledby="individualArchiveConfirmLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="individualArchiveConfirmLabel">
+          <i class="bi bi-archive me-2"></i>Confirm Archive
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle text-warning me-3" style="font-size: 2rem;"></i>
+          <div>
+            <h6 class="fw-bold">Archive Equipment</h6>
+            <p class="mb-2">Are you sure you want to archive this equipment?</p>
+            <div class="bg-light p-2 rounded mb-2">
+              <small class="text-muted">Equipment:</small><br>
+              <span id="individualArchiveEquipmentName" class="fw-bold">Loading...</span>
+            </div>
+            <p class="text-muted small mb-0">This equipment will be moved to archived status and can be unarchived later if needed.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-warning" id="confirmIndividualArchive">
+          <i class="bi bi-archive me-1"></i>Archive Equipment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Individual Delete Confirmation Modal -->
+<div class="modal fade" id="individualDeleteConfirmModal" tabindex="-1" aria-labelledby="individualDeleteConfirmLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="individualDeleteConfirmLabel">
+          <i class="bi bi-exclamation-triangle me-2"></i>⚠️ DANGER: Permanent Deletion
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-trash text-danger me-3" style="font-size: 2rem;"></i>
+          <div>
+            <h6 class="fw-bold text-danger">Permanently Delete Equipment</h6>
+            <p class="mb-2">Are you sure you want to <strong class="text-danger">PERMANENTLY DELETE</strong> this equipment?</p>
+            <div class="bg-light p-2 rounded mb-2">
+              <small class="text-muted">Equipment:</small><br>
+              <span id="individualDeleteEquipmentName" class="fw-bold">Loading...</span>
+            </div>
+            <div class="alert alert-danger py-2 px-3">
+              <small class="fw-bold">⚠️ WARNING: This action CANNOT be undone!</small><br>
+              <small>All equipment data, history, and associated documents will be permanently removed.</small>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="confirmIndividualDeletionCheckbox">
+              <label class="form-check-label text-danger fw-bold" for="confirmIndividualDeletionCheckbox">
+                I understand this action is permanent and cannot be undone
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmIndividualDelete" disabled>
+          <i class="bi bi-trash me-1"></i>DELETE PERMANENTLY
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- Compact Table Style -->
 <style>
@@ -404,6 +620,32 @@
     transition: all 0.2s ease-in-out;
     padding: 0.35rem 0.65rem;
     font-weight: 500;
+  }
+
+  /* Disabled dropdown item styling */
+  .dropdown-item.disabled {
+    color: #adb5bd !important;
+    background-color: transparent !important;
+    cursor: not-allowed !important;
+    pointer-events: auto !important; /* Allow tooltips to work */
+  }
+
+  .dropdown-item.disabled:hover {
+    color: #adb5bd !important;
+    background-color: #f8f9fa !important;
+  }
+
+  .dropdown-item.disabled .text-muted {
+    color: #adb5bd !important;
+  }
+
+  /* Ensure disabled buttons can still show tooltips */
+  button:disabled {
+    pointer-events: auto !important;
+  }
+
+  button:disabled:hover {
+    cursor: not-allowed;
   }
 
   .dataTables_paginate .pagination .page-link.active,
@@ -506,6 +748,35 @@ $(document).ready(function () {
   14: 'Status',
   15: 'Purchase Date'
 };
+
+  // Success and Error Message Functions
+  function showSuccessMessage(message) {
+    const alertDiv = `
+      <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+    $('.container-fluid').prepend(alertDiv);
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      $('.alert-success').fadeOut();
+    }, 5000);
+  }
+
+  function showErrorMessage(message) {
+    const alertDiv = `
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    `;
+    $('.container-fluid').prepend(alertDiv);
+    // Auto-dismiss after 8 seconds
+    setTimeout(() => {
+      $('.alert-danger').fadeOut();
+    }, 8000);
+  }
 
   // Init DataTable
 table = $('#equipmentTable').DataTable({
@@ -877,10 +1148,62 @@ $(document).on('change', '.column-select', function () {
 
   $('#selectAll').on('click', function () {
     $('.equipment-checkbox').prop('checked', this.checked);
+    updateBulkActionButtons();
   });
+
+  // Update bulk action buttons visibility based on selection
+  function updateBulkActionButtons() {
+    const selectedCount = $('.equipment-checkbox:checked').length;
+    const bulkArchiveBtn = $('#bulkArchiveBtn');
+    const bulkDeleteBtn = $('#bulkDeleteBtn');
+    const bulkUpdateForm = $('#bulkUpdateForm');
+    const applyBtn = bulkUpdateForm.find('button[type="submit"]');
+    
+    if (selectedCount > 0) {
+      // Enable buttons
+      bulkArchiveBtn.removeClass('btn-outline-warning').addClass('btn-warning').prop('disabled', false);
+      bulkArchiveBtn.find('i').removeClass('text-muted').addClass('text-white');
+      
+      // Only update delete button if it exists (admin/superadmin only)
+      if (bulkDeleteBtn.length > 0) {
+        bulkDeleteBtn.removeClass('btn-outline-danger').addClass('btn-danger').prop('disabled', false);
+        bulkDeleteBtn.find('i').removeClass('text-muted').addClass('text-white');
+      }
+      
+      applyBtn.removeClass('btn-outline-primary').addClass('btn-primary').prop('disabled', false);
+    } else {
+      // Disable buttons
+      bulkArchiveBtn.removeClass('btn-warning').addClass('btn-outline-warning').prop('disabled', true);
+      bulkArchiveBtn.find('i').removeClass('text-white').addClass('text-muted');
+      
+      // Only update delete button if it exists (admin/superadmin only)
+      if (bulkDeleteBtn.length > 0) {
+        bulkDeleteBtn.removeClass('btn-danger').addClass('btn-outline-danger').prop('disabled', true);
+        bulkDeleteBtn.find('i').removeClass('text-white').addClass('text-muted');
+      }
+      
+      applyBtn.removeClass('btn-primary').addClass('btn-outline-primary').prop('disabled', true);
+    }
+  }
+
+  // Listen for individual checkbox changes
+  $(document).on('change', '.equipment-checkbox', function() {
+    updateBulkActionButtons();
+    
+    // Update select all checkbox state
+    const totalCheckboxes = $('.equipment-checkbox').length;
+    const checkedCheckboxes = $('.equipment-checkbox:checked').length;
+    $('#selectAll').prop('indeterminate', checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes);
+    $('#selectAll').prop('checked', checkedCheckboxes === totalCheckboxes);
+  });
+
+  // Initialize button states
+  updateBulkActionButtons();
   
   $('#bulkUpdateForm').on('submit', function (e) {
     e.preventDefault();
+    console.log('Bulk update form submitted'); // Debug
+    
     const selectedIds = $('.equipment-checkbox:checked')
       .map((_, cb) => cb.value)
       .get();
@@ -890,12 +1213,93 @@ $(document).on('change', '.column-select', function () {
       return;
     }
 
-    const formData = $(this).serializeArray();
-    formData.push({ name: 'equipment_ids', value: selectedIds.join(',') });
+    // Get selected status and category
+    const statusSelect = $('select[name="status_id"]');
+    const categorySelect = $('select[name="category_id"]');
+    const statusId = statusSelect.val();
+    const categoryId = categorySelect.val();
+    
+    // Check if any changes are selected
+    if (!statusId && !categoryId) {
+      // Show instructional modal instead of basic alert
+      console.log('No status or category selected, showing instruction modal');
+      
+      // Try Bootstrap 5 syntax first
+      try {
+        const modal = new bootstrap.Modal(document.getElementById('selectStatusCategoryModal'));
+        modal.show();
+      } catch (e) {
+        console.log('Bootstrap 5 failed, trying jQuery/Bootstrap 4:', e);
+        // Fallback to jQuery/Bootstrap 4 syntax
+        $('#selectStatusCategoryModal').modal('show');
+      }
+      return;
+    }
 
-    $.post($(this).attr('action'), formData, function (response) {
+    // Show confirmation modal with details
+    $('#bulkUpdateCount').text(selectedIds.length);
+    
+    // Show what changes will be applied
+    if (statusId) {
+      const statusName = statusSelect.find('option:selected').text();
+      $('#newStatusName').text(statusName);
+      $('#statusChangeInfo').show();
+    } else {
+      $('#statusChangeInfo').hide();
+    }
+    
+    if (categoryId) {
+      const categoryName = categorySelect.find('option:selected').text();
+      $('#newCategoryName').text(categoryName);
+      $('#categoryChangeInfo').show();
+    } else {
+      $('#categoryChangeInfo').hide();
+    }
+    
+    console.log('About to show bulk update modal'); // Debug
+    
+    // Try Bootstrap 5 syntax first
+    try {
+      const modal = new bootstrap.Modal(document.getElementById('bulkUpdateConfirmModal'));
+      modal.show();
+    } catch (e) {
+      console.log('Bootstrap 5 failed, trying jQuery/Bootstrap 4:', e);
+      // Fallback to jQuery/Bootstrap 4 syntax
+      $('#bulkUpdateConfirmModal').modal('show');
+    }
+    
+    // Store form data for later use
+    $('#bulkUpdateConfirmModal').data('selectedIds', selectedIds);
+    $('#bulkUpdateConfirmModal').data('statusId', statusId);
+    $('#bulkUpdateConfirmModal').data('categoryId', categoryId);
+  });
+
+  // Handle confirmed bulk update
+  $('#confirmBulkUpdate').on('click', function() {
+    const selectedIds = $('#bulkUpdateConfirmModal').data('selectedIds');
+    const statusId = $('#bulkUpdateConfirmModal').data('statusId');
+    const categoryId = $('#bulkUpdateConfirmModal').data('categoryId');
+    $('#bulkUpdateConfirmModal').modal('hide');
+    
+    // Prepare form data
+    const formData = [];
+    formData.push({ name: 'csrfmiddlewaretoken', value: $('[name=csrfmiddlewaretoken]').val() });
+    formData.push({ name: 'equipment_ids', value: selectedIds.join(',') });
+    
+    if (statusId) {
+      formData.push({ name: 'status_id', value: statusId });
+    }
+    if (categoryId) {
+      formData.push({ name: 'category_id', value: categoryId });
+    }
+
+    $.post($('#bulkUpdateForm').attr('action'), formData, function (response) {
       alert("Bulk update successful.");
       table.ajax.reload(); // Refresh table
+      
+      // Reset form
+      $('#bulkUpdateForm')[0].reset();
+      updateBulkActionButtons();
     }).fail(function (xhr) {
       // Show specific error message from server
       let errorMsg = "Something went wrong.";
@@ -904,6 +1308,156 @@ $(document).on('change', '.column-select', function () {
       }
       alert(errorMsg);
     });
+  });
+
+  // Bulk Archive functionality
+  $('#bulkArchiveBtn').on('click', function () {
+    console.log('Bulk archive button clicked'); // Debug
+    const selectedIds = $('.equipment-checkbox:checked')
+      .map((_, cb) => cb.value)
+      .get();
+
+    console.log('Selected IDs:', selectedIds); // Debug
+
+    if (selectedIds.length === 0) {
+      alert("Please select at least one equipment to archive.");
+      return;
+    }
+
+    // Show custom confirmation modal
+    $('#bulkArchiveCount').text(selectedIds.length);
+    console.log('About to show modal'); // Debug
+    
+    // Try Bootstrap 5 syntax first
+    try {
+      const modal = new bootstrap.Modal(document.getElementById('bulkArchiveConfirmModal'));
+      modal.show();
+    } catch (e) {
+      console.log('Bootstrap 5 failed, trying jQuery/Bootstrap 4:', e);
+      // Fallback to jQuery/Bootstrap 4 syntax
+      $('#bulkArchiveConfirmModal').modal('show');
+    }
+    
+    // Store selected IDs for later use
+    $('#bulkArchiveConfirmModal').data('selectedIds', selectedIds);
+  });
+
+  // Handle bulk archive confirmation
+  $('#confirmBulkArchive').on('click', function() {
+    const selectedIds = $('#bulkArchiveConfirmModal').data('selectedIds');
+    $('#bulkArchiveConfirmModal').modal('hide');
+    
+    // Send bulk archive request
+    $.post("{% url 'equipments:bulk_archive' %}", {
+      'equipment_ids': selectedIds.join(','),
+      'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+    }, function (response) {
+      // Show success message
+      showSuccessMessage(`Successfully archived ${selectedIds.length} equipment(s).`);
+      table.ajax.reload(); // Refresh table
+      $('.equipment-checkbox').prop('checked', false); // Uncheck all
+      $('#selectAll').prop('checked', false); // Uncheck select all
+    }).fail(function (xhr) {
+      let errorMsg = "Failed to archive equipment.";
+      if (xhr.responseJSON && xhr.responseJSON.error) {
+        errorMsg = xhr.responseJSON.error;
+      }
+      showErrorMessage(errorMsg);
+    });
+  });
+
+  // Bulk Delete functionality
+  $('#bulkDeleteBtn').on('click', function () {
+    console.log('Bulk delete button clicked'); // Debug
+    const selectedIds = $('.equipment-checkbox:checked')
+      .map((_, cb) => cb.value)
+      .get();
+
+    if (selectedIds.length === 0) {
+      alert("Please select at least one equipment to delete.");
+      return;
+    }
+
+    // Show custom confirmation modal
+    $('#bulkDeleteCount').text(selectedIds.length);
+    $('#confirmDeletionCheckbox').prop('checked', false);
+    $('#confirmBulkDelete').prop('disabled', true);
+    
+    console.log('About to show delete modal'); // Debug
+    
+    // Try Bootstrap 5 syntax first
+    try {
+      const modal = new bootstrap.Modal(document.getElementById('bulkDeleteConfirmModal'));
+      modal.show();
+    } catch (e) {
+      console.log('Bootstrap 5 failed, trying jQuery/Bootstrap 4:', e);
+      // Fallback to jQuery/Bootstrap 4 syntax
+      $('#bulkDeleteConfirmModal').modal('show');
+    }
+    
+    // Store selected IDs for later use
+    $('#bulkDeleteConfirmModal').data('selectedIds', selectedIds);
+  });
+
+  // Handle deletion confirmation checkbox
+  $('#confirmDeletionCheckbox').on('change', function() {
+    $('#confirmBulkDelete').prop('disabled', !this.checked);
+  });
+
+  // Handle bulk delete confirmation
+  $('#confirmBulkDelete').on('click', function() {
+    const selectedIds = $('#bulkDeleteConfirmModal').data('selectedIds');
+    $('#bulkDeleteConfirmModal').modal('hide');
+    
+    // Send bulk delete request
+    $.post("{% url 'equipments:bulk_delete' %}", {
+      'equipment_ids': selectedIds.join(','),
+      'csrfmiddlewaretoken': $('[name=csrfmiddlewaretoken]').val()
+    }, function (response) {
+      showSuccessMessage(`Successfully deleted ${selectedIds.length} equipment(s) permanently.`);
+      table.ajax.reload(); // Refresh table
+      $('.equipment-checkbox').prop('checked', false); // Uncheck all
+      $('#selectAll').prop('checked', false); // Uncheck select all
+    }).fail(function (xhr) {
+      let errorMsg = "Failed to delete equipment.";
+      if (xhr.responseJSON && xhr.responseJSON.error) {
+        errorMsg = xhr.responseJSON.error;
+      }
+      showErrorMessage(errorMsg);
+    });
+  });
+
+  // Individual Archive Confirmation
+  window.showIndividualArchiveConfirm = function(equipmentId, equipmentName, archiveUrl) {
+    $('#individualArchiveEquipmentName').text(equipmentName);
+    $('#individualArchiveConfirmModal').data('archiveUrl', archiveUrl);
+    $('#individualArchiveConfirmModal').modal('show');
+  };
+
+  $('#confirmIndividualArchive').on('click', function() {
+    const archiveUrl = $('#individualArchiveConfirmModal').data('archiveUrl');
+    $('#individualArchiveConfirmModal').modal('hide');
+    window.location.href = archiveUrl;
+  });
+
+  // Individual Delete Confirmation
+  window.showIndividualDeleteConfirm = function(equipmentId, equipmentName, deleteUrl) {
+    $('#individualDeleteEquipmentName').text(equipmentName);
+    $('#confirmIndividualDeletionCheckbox').prop('checked', false);
+    $('#confirmIndividualDelete').prop('disabled', true);
+    $('#individualDeleteConfirmModal').data('deleteUrl', deleteUrl);
+    $('#individualDeleteConfirmModal').modal('show');
+  };
+
+  // Handle individual deletion confirmation checkbox
+  $('#confirmIndividualDeletionCheckbox').on('change', function() {
+    $('#confirmIndividualDelete').prop('disabled', !this.checked);
+  });
+
+  $('#confirmIndividualDelete').on('click', function() {
+    const deleteUrl = $('#individualDeleteConfirmModal').data('deleteUrl');
+    $('#individualDeleteConfirmModal').modal('hide');
+    window.location.href = deleteUrl;
   });
   
 
@@ -1196,6 +1750,73 @@ $(document).on('change', '.column-select', function () {
     }
   });
 
+  // Initialize tooltips for disabled buttons
+  function initializeTooltips() {
+    // Initialize tooltips for elements with data-bs-toggle="tooltip"
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Initialize tooltips for elements with title attribute (including disabled buttons)
+    var titleElements = [].slice.call(document.querySelectorAll('button[title]:not([data-bs-toggle="tooltip"]), a[title]:not([data-bs-toggle="tooltip"])'));
+    var titleTooltips = titleElements.map(function (titleElement) {
+      // Dispose existing tooltip if any
+      var existingTooltip = bootstrap.Tooltip.getInstance(titleElement);
+      if (existingTooltip) {
+        existingTooltip.dispose();
+      }
+      
+      return new bootstrap.Tooltip(titleElement, {
+        placement: 'top',
+        trigger: 'hover focus' // Ensure it works on disabled buttons
+      });
+    });
+  }
+
+  // Initialize tooltips when page loads
+  initializeTooltips();
+
+  // Re-initialize tooltips when DataTable redraws (after pagination, search, etc.)
+  table.on('draw', function() {
+    initializeTooltips();
+    updateBulkActionButtons(); // Update button states after table redraw
+  });
+
 });
 </script>
+
+<!-- Select Status/Category First Modal -->
+<div class="modal fade" id="selectStatusCategoryModal" tabindex="-1" aria-labelledby="selectStatusCategoryModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="selectStatusCategoryModalLabel">
+          <i class="fas fa-exclamation-triangle me-2"></i>Selection Required
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="text-center">
+          <i class="fas fa-hand-pointer fa-3x text-warning mb-3"></i>
+          <h6 class="mb-3">Please Select an Action First</h6>
+          <p class="mb-0">Before you can update equipment, you need to:</p>
+          <ul class="list-unstyled mt-2">
+            <li><i class="fas fa-check text-success me-2"></i>Choose a <strong>Status</strong> to change to, OR</li>
+            <li><i class="fas fa-check text-success me-2"></i>Choose a <strong>Category</strong> to change to</li>
+          </ul>
+          <div class="alert alert-info mt-3 mb-0">
+            <small><i class="fas fa-info-circle me-1"></i>Use the dropdown menus above the equipment table to make your selection.</small>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+          <i class="fas fa-check me-1"></i>Got it!
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
