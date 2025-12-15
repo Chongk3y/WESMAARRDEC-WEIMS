@@ -128,8 +128,12 @@ Thumbs.db
 
 # Project specific
 password.txt
+secrets.json
+*.secret
 test_equipment_report.pdf
 test_pdf.py
+hierarchy_chart.png
+my_map.html
 
 # Migration files (optional - you might want to include these)
 # */migrations/

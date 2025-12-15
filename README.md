@@ -169,12 +169,24 @@ Press `Ctrl + C` in the terminal
 
 ## 🔐 Default Credentials
 
-### Admin Account
+### Initial Setup
 
-- **Username**: `admin`
-- **Password**: `w32m@ARRd3c_pR0j3cT`
+After completing the installation, create your admin account:
 
-**Note**: For security, change the default password after first login in production environments.
+```bash
+python manage.py createsuperuser
+```
+
+Follow the prompts to set:
+- Username
+- Email address (optional)
+- Password
+
+**Security Notes**: 
+- Never commit passwords or credentials to version control
+- Change default passwords immediately in production
+- Use strong, unique passwords for all accounts
+- Enable two-factor authentication when possible
 
 ---
 
