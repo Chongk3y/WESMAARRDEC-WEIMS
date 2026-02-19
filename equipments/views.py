@@ -355,6 +355,7 @@ def index(request):
         'is_admin': is_admin(request.user),
         'is_encoder': is_encoder(request.user),
         'is_client': is_client(request.user),
+        'import_error': request.session.pop('import_error', None),
     }
     
     return render(request, 'equipments/equipment_list.html', context)
@@ -1153,64 +1154,107 @@ def export_excel(request):
 def import_excel(request):
     if request.method == 'POST' and request.FILES.get('excel_file'):
         excel_file = request.FILES['excel_file']
-        wb = openpyxl.load_workbook(excel_file)
-        ws = wb.active
-
-        for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
-            try:
-                # Convert empty strings to None for all fields and pad row to ensure we have enough columns
-                cleaned_row = [cell if cell not in ('', None) else None for cell in row]
-                # Pad the row with None values to ensure we have at least 14 columns (indices 0-13)
-                while len(cleaned_row) < 14:
-                    cleaned_row.append(None)
-                
-                propertynum = cleaned_row[0]
-                # Skip if property number exists and is already in DB (ignore if blank)
-                if propertynum and Equipment.objects.filter(item_propertynum=propertynum).exists():
-                    continue
-                
-                # Safely get values with fallbacks
-                def get_safe_value(index, default=None):
-                    return cleaned_row[index] if index < len(cleaned_row) else default
-                
-                Equipment.objects.create(
-                    item_propertynum=get_safe_value(0),
-                    item_name=get_safe_value(1) or "Imported Item",  # Required field, provide default
-                    item_desc=get_safe_value(2),
-                    additional_info=(get_safe_value(3)[:300] if get_safe_value(3) else None),
-                    item_purdate=parse_date(get_safe_value(4)),
-                    po_number=get_safe_value(5),
-                    fund_source=get_safe_value(6),
-                    supplier=get_safe_value(7),
-                    item_amount=get_safe_value(8) or 0.00,  # Required field, provide default
-                    project_name=get_safe_value(9),
-                    assigned_to=get_safe_value(10),
-                    end_user=get_safe_value(11),
-                    location=get_safe_value(12),
-                    current_location=get_safe_value(13),
-                    category=Category.objects.get(pk=1),  
-                    status=Status.objects.get(pk=1),      
-                    emp=request.user,
-                    created_by=request.user,
-                    updated_by=request.user,
-                )
-                # Log the import for this equipment
-                EquipmentActionLog.objects.create(
-                    equipment=Equipment.objects.filter(item_propertynum=propertynum).first() if propertynum else None,
-                    action='create',
-                    user=request.user,
-                    summary=f"Imported equipment from Excel: {get_safe_value(1) or 'Unknown'} (Property #: {propertynum or 'None'})"
-                )
-            except Exception as e:
-                # Provide more detailed error information
-                error_msg = f"Row {idx}: {str(e)}"
-                if "list index out of range" in str(e):
-                    error_msg = f"Row {idx}: Not enough columns in Excel file (expected 14 columns, got {len(row) if 'row' in locals() else 'unknown'})"
-                messages.error(request, error_msg)
-        
-        messages.success(request, "Excel import completed.")
+        try:
+            wb = openpyxl.load_workbook(excel_file)
+            ws = wb.active
+            imported_count = 0
+            
+            for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                try:
+                    cleaned_row = [cell if cell not in ('', None) else None for cell in row]
+                    while len(cleaned_row) < 14:
+                        cleaned_row.append(None)
+                    
+                    propertynum = cleaned_row[0]
+                    if propertynum and Equipment.objects.filter(item_propertynum=propertynum).exists():
+                        continue
+                    
+                    def get_safe_value(index, default=None):
+                        return cleaned_row[index] if index < len(cleaned_row) else default
+                    
+                    Equipment.objects.create(
+                        item_propertynum=get_safe_value(0),
+                        item_name=get_safe_value(1) or "Imported Item",
+                        item_desc=get_safe_value(2),
+                        additional_info=(get_safe_value(3)[:300] if get_safe_value(3) else None),
+                        item_purdate=parse_date(get_safe_value(4)),
+                        po_number=get_safe_value(5),
+                        fund_source=get_safe_value(6),
+                        supplier=get_safe_value(7),
+                        item_amount=get_safe_value(8) or 0.00,
+                        project_name=get_safe_value(9),
+                        assigned_to=get_safe_value(10),
+                        end_user=get_safe_value(11),
+                        location=get_safe_value(12),
+                        current_location=get_safe_value(13),
+                        category=Category.objects.get(pk=1),  
+                        status=Status.objects.get(pk=1),      
+                        emp=request.user,
+                        created_by=request.user,
+                        updated_by=request.user,
+                    )
+                    imported_count += 1
+                    
+                    EquipmentActionLog.objects.create(
+                        equipment=Equipment.objects.filter(item_propertynum=propertynum).first() if propertynum else None,
+                        action='create',
+                        user=request.user,
+                        summary=f"Imported equipment from Excel: {get_safe_value(1) or 'Unknown'} (Property #: {propertynum or 'None'})"
+                    )
+                    
+                except Category.DoesNotExist:
+                    request.session['import_error'] = {
+                        'title': 'Category Not Found',
+                        'message': f'Import stopped at Row {idx}: The specified category does not exist in the system.',
+                        'details': 'Please ensure all equipment categories are created before importing. Navigate to <strong>Admin Panel → Equipment Categories</strong> to add missing categories.'
+                    }
+                    return redirect('equipments:index')
+                    
+                except Status.DoesNotExist:
+                    request.session['import_error'] = {
+                        'title': 'Status Not Found',
+                        'message': f'Import stopped at Row {idx}: The specified status does not exist in the system.',
+                        'details': 'Please ensure all equipment statuses are created before importing. Navigate to <strong>Admin Panel → Equipment Statuses</strong> to add missing statuses.'
+                    }
+                    return redirect('equipments:index')
+                    
+                except Exception as e:
+                    error_title = "Import Failed"
+                    error_msg = f"Import stopped at Row {idx}"
+                    error_details = str(e)
+                    
+                    if "Category matching query does not exist" in str(e):
+                        error_title = "Category Not Found"
+                        error_details = "The specified category does not exist in the system. Please verify that all categories referenced in your Excel file have been created. Navigate to <strong>Admin Panel → Equipment Categories</strong> to manage categories."
+                    elif "Status matching query does not exist" in str(e):
+                        error_title = "Status Not Found"
+                        error_details = "The specified status does not exist in the system. Please verify that all statuses referenced in your Excel file have been created. Navigate to <strong>Admin Panel → Equipment Statuses</strong> to manage statuses."
+                    elif "list index out of range" in str(e):
+                        error_title = "Invalid File Format"
+                        error_details = f"Insufficient data columns detected. Expected 14 columns, but found {len(row) if 'row' in locals() else 'unknown'}. Please ensure your Excel file follows the correct template format."
+                    elif "does not exist" in str(e).lower():
+                        error_title = "Missing Reference Data"
+                        error_details = "Referenced data not found in the system. Please ensure all categories, statuses, and related data are properly configured before importing."
+                    
+                    request.session['import_error'] = {
+                        'title': error_title,
+                        'message': error_msg,
+                        'details': error_details
+                    }
+                    return redirect('equipments:index')
+            
+            messages.success(request, f"Excel import completed successfully. {imported_count} equipment(s) imported.")
+            
+        except Exception as e:
+            request.session['import_error'] = {
+                'title': 'File Processing Error',
+                'message': 'Unable to process the Excel file.',
+                'details': f"Error: {str(e)}. Please ensure you're uploading a valid Excel file (.xlsx or .xls)."
+            }
+            return redirect('equipments:index')
     else:
         messages.error(request, "Please select an Excel file to import.")
+    
     return redirect('equipments:index')
 
 def parse_date(val):

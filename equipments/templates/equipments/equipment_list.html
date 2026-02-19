@@ -500,6 +500,39 @@
   </div>
 </div>
 
+<!-- Import Error Modal -->
+<div class="modal fade" id="importErrorModal" tabindex="-1" aria-labelledby="importErrorLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="importErrorLabel">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i><span id="importErrorTitle">Import Failed</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger mb-3">
+          <h6 class="fw-bold mb-2"><i class="bi bi-x-circle me-1"></i><span id="importErrorMessage">Error Message</span></h6>
+          <p class="mb-0" id="importErrorDetails">Error details will appear here.</p>
+        </div>
+        <div class="bg-light p-3 rounded">
+          <h6 class="fw-bold mb-2"><i class="bi bi-lightbulb text-warning me-1"></i>How to Fix:</h6>
+          <ol class="mb-0 ps-3">
+            <li>Review the error message above</li>
+            <li>Fix the issue in your Excel file or add missing data to the system</li>
+            <li>Try importing again</li>
+          </ol>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+          <i class="bi bi-check-circle me-1"></i>Understood
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Individual Delete Confirmation Modal -->
 <div class="modal fade" id="individualDeleteConfirmModal" tabindex="-1" aria-labelledby="individualDeleteConfirmLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -731,7 +764,23 @@ const canManageDocuments = {{ is_admin|yesno:"true,false" }} || {{ is_encoder|ye
 
 let table;
 $(document).ready(function () {
-   const isClient = {{ is_client|yesno:"true,false" }};
+  // Check for import error and show modal
+  {% if import_error %}
+    $('#importErrorTitle').text('{{ import_error.title }}');
+    $('#importErrorMessage').text('{{ import_error.message }}');
+    $('#importErrorDetails').html('{{ import_error.details|safe }}');
+    
+    setTimeout(function() {
+      try {
+        const modal = new bootstrap.Modal(document.getElementById('importErrorModal'));
+        modal.show();
+      } catch (e) {
+        $('#importErrorModal').modal('show');
+      }
+    }, 500);
+  {% endif %}
+  
+  const isClient = {{ is_client|yesno:"true,false" }};
   const columnMap = {
   2: 'Property #',
   3: 'Name',
