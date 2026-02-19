@@ -63,12 +63,23 @@
             <input type="text" name="supplier" class="form-control form-control-sm" value="{{ values.supplier|default_if_none:'' }}">
           </div>
 
-          <div class="col-md-6">
-            <label class="form-label small">Amount (₱)</label>
-            <input type="number" step="0.01" name="item_amount" class="form-control form-control-sm {% if errors.item_amount %}is-invalid{% endif %}" value="{{ values.item_amount|default_if_none:'' }}">
+          <div class="col-md-4">
+            <label class="form-label small">Units/Quantity</label>
+            <input type="number" min="1" name="units" id="unitsInput" class="form-control form-control-sm" value="{{ values.units|default:'1' }}" oninput="calculateTotal()">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small">Unit Price (₱)</label>
+            <input type="number" step="0.01" name="item_amount" id="unitPriceInput" class="form-control form-control-sm {% if errors.item_amount %}is-invalid{% endif %}" value="{{ values.item_amount|default_if_none:'' }}" oninput="calculateTotal()">
             {% if errors.item_amount %}
             <div class="invalid-feedback d-block">{{ errors.item_amount }}</div>
             {% endif %}
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label small">Total Value (₱)</label>
+            <input type="text" id="totalValueDisplay" class="form-control form-control-sm bg-light" readonly value="{{ values.total_value|default:'0.00' }}" placeholder="Auto-calculated">
+            <small class="text-muted">Auto-calculated</small>
           </div>
 
           <div class="col-md-6">
@@ -430,7 +441,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
+
+  // Calculate total value on page load
+  calculateTotal();
 });
+
+// Calculate Total Value Function
+function calculateTotal() {
+  const units = parseFloat(document.getElementById('unitsInput').value) || 1;
+  const unitPrice = parseFloat(document.getElementById('unitPriceInput').value) || 0;
+  const totalValue = units * unitPrice;
+  
+  document.getElementById('totalValueDisplay').value = totalValue.toFixed(2);
+}
 </script>
 
 {% endblock %}

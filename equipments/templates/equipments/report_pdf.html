@@ -23,7 +23,9 @@
                 <th>PO #</th>
                 <th>Fund Source</th>
                 <th>Supplier</th>
-                <th>Amount</th>
+                <th>Units</th>
+                <th>Unit Price</th>
+                <th>Total Value</th>
                 <th>Assigned To</th>
                 <th>Location</th>
                 <th>End User</th>
@@ -41,7 +43,9 @@
                     <td>{{ equipment.fund_source }}</td>
                     <td>{{ equipment.supplier }}</td>
                     {% load humanize %}
+                    <td>{{ equipment.units|default:1 }}</td>
                     <td>{{ equipment.item_amount|floatformat:2|intcomma }}</td>
+                    <td>{{ equipment.total_value|floatformat:2|intcomma|default:"0.00" }}</td>
                     <td>{{ equipment.assigned_to }}</td>
                     <td>{{ equipment.location }}</td>
                     <td>{{ equipment.end_user }}</td>

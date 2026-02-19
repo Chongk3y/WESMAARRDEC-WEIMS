@@ -61,7 +61,9 @@ class Equipment(models.Model):
     fund_source = models.CharField(max_length=100, blank=True, null=True, verbose_name="Fund Source")
     supplier = models.CharField(max_length=100, blank=True, null=True, verbose_name="Supplier")
 
-    item_amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Amount")
+    units = models.IntegerField(default=1, verbose_name="Units/Quantity")
+    item_amount = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Unit Price")
+    total_value = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, verbose_name="Total Value")
 
     project_name = models.CharField(max_length=100, blank=True, null=True, verbose_name="Project Name")
     assigned_to = models.CharField(max_length=100, blank=True, null=True, verbose_name="Assigned To")
@@ -123,6 +125,14 @@ class Equipment(models.Model):
     class Meta: 
         verbose_name = "Equipment"
         verbose_name_plural = "Equipment Records"
+
+    def save(self, *args, **kwargs):
+        # Automatically calculate total_value based on units and item_amount
+        if self.units and self.item_amount:
+            self.total_value = self.units * self.item_amount
+        else:
+            self.total_value = self.item_amount if self.item_amount else 0
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.item_name

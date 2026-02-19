@@ -59,10 +59,62 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+
+<style>
+  /* Limit table width and add proper column sizing */
+  #logsTable {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  /* Set specific column widths */
+  #logsTable thead th:nth-child(1) { width: 140px; } /* Date/Time */
+  #logsTable thead th:nth-child(2) { width: 150px; } /* User */
+  #logsTable thead th:nth-child(3) { width: 100px; } /* Action */
+  #logsTable thead th:nth-child(4) { width: 180px; } /* Equipment */
+  #logsTable thead th:nth-child(5) { width: auto; }  /* Summary - takes remaining space */
+
+  /* Handle text overflow for long content */
+  #logsTable td {
+    word-wrap: break-word;
+    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  /* Specific handling for Summary column */
+  #logsTable td:nth-child(5) {
+    max-width: 400px;
+  }
+
+  /* Prevent Equipment column from being too wide */
+  #logsTable td:nth-child(4) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Add padding and alignment */
+  #logsTable th,
+  #logsTable td {
+    padding: 0.75rem 0.5rem;
+    vertical-align: middle;
+  }
+</style>
+
 <script>
 $(document).ready(function() {
   $('#logsTable').DataTable({
-    order: [[0, 'desc']]
+    order: [[0, 'desc']],
+    pageLength: 25,
+    scrollX: false,
+    autoWidth: false,
+    columnDefs: [
+      { width: "140px", targets: 0 },  // Date/Time
+      { width: "150px", targets: 1 },  // User
+      { width: "100px", targets: 2 },  // Action
+      { width: "180px", targets: 3 },  // Equipment
+      { width: "auto", targets: 4 }    // Summary
+    ]
   });
 });
 </script>

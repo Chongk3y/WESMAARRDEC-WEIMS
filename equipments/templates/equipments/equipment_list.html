@@ -25,13 +25,14 @@
       {% csrf_token %}
       <input type="file" name="excel_file" accept=".xlsx,.xls" style="display:none;" id="importExcelInput" onchange="this.form.submit()">
       <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('importExcelInput').click();"
-              data-bs-toggle="tooltip" title="Import equipment from Excel file">
+              data-bs-toggle="tooltip" 
+              title="Import equipment from Excel file. Note: Total Value is auto-calculated (Units × Unit Price), do not include it or it will be ignored.">
         <i class="bi bi-upload"></i> <span class="d-none d-md-inline">Import</span>
       </button>
     </form>
 
     <a href="{% url 'equipments:export_excel' %}" class="btn btn-info btn-sm"
-       data-bs-toggle="tooltip" title="Export equipment to Excel">
+       data-bs-toggle="tooltip" title="Export all equipment to Excel template">
       <i class="bi bi-file-earmark-excel"></i> <span class="d-none d-md-inline">Export</span>
     </a>
   </div>
@@ -164,7 +165,9 @@
               <th>Name</th>
               <th>Description</th>
               <th>PO Number</th>
-              <th>Amount</th>
+              <th>Units</th>
+              <th>Unit Price</th>
+              <th>Total Value</th>
               <th>End User</th>
               <th>Category</th>
               <th>Status</th>
@@ -292,11 +295,22 @@
           
           <div class="col-md-8">
             <div class="row g-2">
+              <div class="col-sm-12 mb-2">
+                <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center justify-content-between">
+                  <div>
+                    <small class="text-muted d-block" style="font-size: 0.7rem;">Equipment ID (Unique Identifier)</small>
+                    <span id="modalEquipmentId" class="fw-bold" style="font-size: 1.1rem;"></span>
+                  </div>
+                  <i class="bi bi-hash" style="font-size: 1.5rem; opacity: 0.3;"></i>
+                </div>
+              </div>
               <div class="col-sm-6"><small class="text-muted">Property #</small><div id="modalPropertyNum" class="fw-medium"></div></div>
               <div class="col-sm-6"><small class="text-muted">Name</small><div id="modalName" class="fw-medium"></div></div>
               <div class="col-sm-12"><small class="text-muted">Description</small><div id="modalDesc" class="fw-normal text-wrap"></div></div>
               <div class="col-sm-12"><small class="text-muted">Additional Info</small><div id="modalAddInfo" class="text-muted"></div></div>
-              <div class="col-sm-6"><small class="text-muted">Amount</small><div id="modalAmount" class="fw-medium text-success"></div></div>
+              <div class="col-sm-4"><small class="text muted">Units</small><div id="modalUnits" class="fw-medium"></div></div>
+              <div class="col-sm-4"><small class="text-muted">Unit Price</small><div id="modalAmount" class="fw-medium text-success"></div></div>
+              <div class="col-sm-4"><small class="text-muted">Total Value</small><div id="modalTotalValue" class="fw-medium text-success"></div></div>
               <div class="col-sm-6"><small class="text-muted">Category</small><div id="modalCategory"></div></div>
               <div class="col-sm-6"><small class="text-muted">Status</small><div id="modalStatus"></div></div>
               <div class="col-sm-12" id="modalDamageReasonRow" style="display: none;"><small class="text-muted">Damage Reason</small><div id="modalDamageReason" class="fw-normal text-wrap text-danger"></div></div>
@@ -510,7 +524,13 @@
 </div>
 
 <!-- Import Error Modal -->
-<div class="modal fade" id="importErrorModal" tabindex="-1" aria-labelledby="importErrorLabel" aria-hidden="true">
+<div class="modal fade" id="importErrorModal" tabindex="-1" aria-labelledby="importErrorLabel" aria-hidden="true"
+     {% if import_error %}
+     data-error-title="{{ import_error.title }}"
+     data-error-message="{{ import_error.message }}"
+     data-error-details="{{ import_error.details|striptags }}"
+     data-error-details-html="{{ import_error.details }}"
+     {% endif %}>
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-danger">
       <div class="modal-header bg-danger text-white">
@@ -785,13 +805,14 @@ let table;
 $(document).ready(function () {
   // Check for import error and show modal
   {% if import_error %}
-    $('#importErrorTitle').text('{{ import_error.title }}');
-    $('#importErrorMessage').text('{{ import_error.message }}');
-    $('#importErrorDetails').html('{{ import_error.details|safe }}');
+    const errorModal = document.getElementById('importErrorModal');
+    $('#importErrorTitle').text(errorModal.dataset.errorTitle || 'Import Failed');
+    $('#importErrorMessage').text(errorModal.dataset.errorMessage || 'An error occurred');
+    $('#importErrorDetails').html(errorModal.dataset.errorDetailsHtml || errorModal.dataset.errorDetails || 'No details available');
     
     setTimeout(function() {
       try {
-        const modal = new bootstrap.Modal(document.getElementById('importErrorModal'));
+        const modal = new bootstrap.Modal(errorModal);
         modal.show();
       } catch (e) {
         $('#importErrorModal').modal('show');
@@ -805,16 +826,18 @@ $(document).ready(function () {
   3: 'Name',
   4: 'Description',
   5: 'PO Number',
-  6: 'Fund Source',
-  7: 'Supplier',
-  8: 'Amount',
-  9: 'Assigned To',
-  10: 'End User',
-  11: 'Deployment Location',
-  12: 'Current Location',
-  13: 'Category',
-  14: 'Status',
-  15: 'Purchase Date'
+  6: 'Units',
+  7: 'Unit Price',
+  8: 'Total Value',
+  9: 'Fund Source',
+  10: 'Supplier',
+  11: 'Assigned To',
+  12: 'End User',
+  13: 'Deployment Location',
+  14: 'Current Location',
+  15: 'Category',
+  16: 'Status',
+  17: 'Purchase Date'
 };
 
   // Success and Error Message Functions
@@ -855,6 +878,9 @@ table = $('#equipmentTable').DataTable({
   // stateSave: true,
   scrollX: true,
   autoWidth: false,
+  language: {
+    processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>'
+  },
   
   ajax: {
     url: "{% url 'equipments:equipment_table_json' %}",
@@ -891,30 +917,49 @@ table = $('#equipmentTable').DataTable({
     {
       data: null,
       orderable: false,
+      width: "40px",
+      className: "text-center",
       render: function (data, type, row) {
         return `<input type="checkbox" class="equipment-checkbox" value="${row[1]}">`; // row[1] is the ID now
       }
     },
-  { visible: false }, // ID
-  { title: "Image", orderable: false },
-  { title: "Property #" },
-  { title: "Name" },
-  { title: "Description" },
-  { title: "PO Number" },
-  { title: "Amount" },
-  { title: "End User" },
-  { title: "Category" },
-  { title: "Status" },
-  { title: "Actions", orderable: false, visible: !isClient },
-  { title: "Fund Source", visible: false },
-  { title: "Supplier", visible: false },
-  { title: "Assigned To", visible: false },
-  { title: "Deployment Location", visible: false },
-  { title: "Current Location", visible: false },
-  { title: "PO Date", visible: false },
-  { title: "Project Name", visible: false }
+  { title: "ID", visible: false, width: "60px" }, // ID - hidden but searchable
+  { title: "Image", orderable: false, width: "70px", className: "text-center" },
+  { 
+    title: "Property #",
+    width: "150px",
+    render: function(data, type, row) {
+      // row[1] is ID, row[3] is property number
+      return '<div>' + data + '<br><small class="text-muted" style="font-size: 0.65rem;">ID: #' + row[1] + '</small></div>';
+    }
+  },
+  { title: "Name", width: "180px" },
+  { title: "Description", width: "200px" },
+  { title: "PO Number", width: "120px" },
+  { title: "Units", width: "70px", className: "text-center" },
+  { title: "Unit Price", width: "100px", className: "text-end" },
+  { title: "Total Value", width: "110px", className: "text-end" },
+  { title: "End User", width: "150px" },
+  { title: "Category", width: "120px" },
+  { title: "Status", width: "100px", className: "text-center" },
+  { title: "Actions", orderable: false, visible: !isClient, width: "100px", className: "text-center" },
+  { title: "Fund Source", visible: false, width: "120px" },
+  { title: "Supplier", visible: false, width: "120px" },
+  { title: "Assigned To", visible: false, width: "120px" },
+  { title: "Deployment Location", visible: false, width: "150px" },
+  { title: "Current Location", visible: false, width: "150px" },
+  { title: "PO Date", visible: false, width: "100px" },
+  { title: "Project Name", visible: false, width: "150px" }
   ],
-  pageLength: 10
+  pageLength: 10,
+  drawCallback: function() {
+    // Adjust column widths after each draw to ensure alignment
+    this.api().columns.adjust();
+  },
+  initComplete: function() {
+    // Adjust columns after initialization
+    this.api().columns.adjust().draw();
+  }
 });
 
   let orderDesc = true; // Track current order
@@ -932,12 +977,12 @@ table = $('#equipmentTable').DataTable({
 
 // Column titles in order (match your DataTable columns)
 const columnTitles = [
-  "Select", "ID", "Image", "Property #", "Name", "Description", "PO Number", "Amount", "End User", "Category", "Status", "Actions",
+  "Select", "ID", "Image", "Property #", "Name", "Description", "PO Number", "Units", "Unit Price", "Total Value", "End User", "Category", "Status", "Actions",
   "Fund Source", "Supplier", "Assigned To", "Deployment Location", "Current Location", "PO Date", "Project Name"
 ];
 
 const defaultVisible = [
-  true, false, true, true, true, true, true, true, true, true, true, true,
+  true, false, true, true, true, true, true, true, true, true, true, true, true, true,
   false, false, false, false, false, false, false
 ];
 
@@ -999,7 +1044,7 @@ columnTitles.forEach((title, idx) => {
 $(document).on('change', '.column-select', function () {
   const colIdx = $(this).val();
   const $valueCol = $(this).closest('.filter-row').find('.value-col');
-  if (colIdx == '6') {
+  if (colIdx == '9') {
     // Fund Source
     $valueCol.html(`<select class="form-select form-select-sm value-input">
       <option value="">All</option>
@@ -1007,7 +1052,7 @@ $(document).on('change', '.column-select', function () {
         <option value="{{ fund }}">{{ fund }}</option>
       {% endfor %}
     </select>`);
-  } else if (colIdx == '7') {
+  } else if (colIdx == '10') {
     // Supplier
     $valueCol.html(`<select class="form-select form-select-sm value-input">
       <option value="">All</option>
@@ -1015,7 +1060,7 @@ $(document).on('change', '.column-select', function () {
         <option value="{{ supplier }}">{{ supplier }}</option>
       {% endfor %}
     </select>`);
-  } else if (colIdx == '9') {
+  } else if (colIdx == '11') {
     // Assigned To
     $valueCol.html(`<select class="form-select form-select-sm value-input">
       <option value="">All</option>
@@ -1023,7 +1068,7 @@ $(document).on('change', '.column-select', function () {
         <option value="{{ assigned }}">{{ assigned }}</option>
       {% endfor %}
     </select>`);
-  } else if (colIdx == '10') {
+  } else if (colIdx == '12') {
     // End User
     $valueCol.html(`<select class="form-select form-select-sm value-input">
       <option value="">All</option>
@@ -1031,7 +1076,7 @@ $(document).on('change', '.column-select', function () {
         <option value="{{ user }}">{{ user }}</option>
       {% endfor %}
     </select>`);
-  } else if (colIdx == '11') {
+  } else if (colIdx == '13') {
     // Deployment Location
     $valueCol.html(`<select class="form-select form-select-sm value-input">
       <option value="">All</option>
@@ -1039,7 +1084,7 @@ $(document).on('change', '.column-select', function () {
         <option value="{{ loc }}">{{ loc }}</option>
       {% endfor %}
     </select>`);
-  } else if (colIdx == '13') {
+  } else if (colIdx == '15') {
     // Category
     $valueCol.html(`<select class="form-select form-select-sm value-input">
       <option value="">All</option>
@@ -1047,7 +1092,7 @@ $(document).on('change', '.column-select', function () {
         <option value="{{ cat.name }}">{{ cat.name }}</option>
       {% endfor %}
     </select>`);
-  } else if (colIdx == '14') {
+  } else if (colIdx == '16') {
     // Status
     $valueCol.html(`<select class="form-select form-select-sm value-input">
       <option value="">All</option>
@@ -1098,11 +1143,14 @@ $(document).on('change', '.column-select', function () {
     // Now fetch and show the modal as before
     $.get(`/weims/equipment/${equipmentId}/json/`, function(data) {
         $('#modalImage').attr('src', data.image);
+        $('#modalEquipmentId').text('#' + equipmentId);
         $('#modalPropertyNum').text(data.propertynum);
         $('#modalName').text(data.name);
         $('#modalDesc').text(data.desc);
         $('#modalAddInfo').text(data.addinfo);
+        $('#modalUnits').text(data.units);
         $('#modalAmount').text('₱' + data.amount);
+        $('#modalTotalValue').text('₱' + data.total_value);
         $('#modalCategory').text(data.category);
         $('#modalStatus').text(data.status);
         

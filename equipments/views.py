@@ -68,7 +68,9 @@ def equipment_table_json(request):
                 Q(po_number__icontains=search_value) |
                 Q(fund_source__icontains=search_value) |
                 Q(supplier__icontains=search_value) |
+                Q(units__icontains=search_value) |
                 Q(item_amount__icontains=search_value) |
+                Q(total_value__icontains=search_value) |
                 Q(assigned_to__icontains=search_value) |
                 Q(end_user__icontains=search_value) |
                 Q(location__icontains=search_value) |
@@ -89,28 +91,38 @@ def equipment_table_json(request):
                     qs = qs.filter(item_desc__icontains=value)
                 elif col_idx == '5':  # PO Number
                     qs = qs.filter(po_number__icontains=value)
-                elif col_idx == '6':  # Fund Source
-                    qs = qs.filter(fund_source__icontains=value)
-                elif col_idx == '7':  # Supplier
-                    qs = qs.filter(supplier__icontains=value)
-                elif col_idx == '8':  # Amount
+                elif col_idx == '6':  # Units
+                    try:
+                        qs = qs.filter(units=int(value))
+                    except Exception:
+                        pass
+                elif col_idx == '7':  # Unit Price
                     try:
                         qs = qs.filter(item_amount=float(value))
                     except Exception:
                         pass
-                elif col_idx == '9':  # Assigned To
+                elif col_idx == '8':  # Total Value
+                    try:
+                        qs = qs.filter(total_value=float(value))
+                    except Exception:
+                        pass
+                elif col_idx == '9':  # Fund Source
+                    qs = qs.filter(fund_source__icontains=value)
+                elif col_idx == '10':  # Supplier
+                    qs = qs.filter(supplier__icontains=value)
+                elif col_idx == '11':  # Assigned To
                     qs = qs.filter(assigned_to__icontains=value)
-                elif col_idx == '10':  # End User
+                elif col_idx == '12':  # End User
                     qs = qs.filter(end_user__icontains=value)
-                elif col_idx == '11':  # Location
+                elif col_idx == '13':  # Deployment Location
                     qs = qs.filter(location__icontains=value)
-                elif col_idx == '12':  # Current Location
+                elif col_idx == '14':  # Current Location
                     qs = qs.filter(current_location__icontains=value)
-                elif col_idx == '13':  # Category
+                elif col_idx == '15':  # Category
                     qs = qs.filter(category__name__icontains=value)
-                elif col_idx == '14':  # Status
+                elif col_idx == '16':  # Status
                     qs = qs.filter(status__name__icontains=value)
-                elif col_idx == '15':  # Purchase Date
+                elif col_idx == '17':  # Purchase Date
                     qs = qs.filter(item_purdate=value)
 
         # Sorting
@@ -219,19 +231,21 @@ def equipment_table_json(request):
                 eq.item_name or '',  # 4: Name
                 eq.item_desc if eq.item_desc else 'None',  # 5: Description
                 eq.po_number if eq.po_number else 'None',  # 6: PO Number
-                f'₱{eq.item_amount:,.2f}' if eq.item_amount else '₱0.00',  # 7: Amount
-                eq.end_user if eq.end_user else 'None',  # 8: End User
-                eq.category.name if eq.category else 'None',  # 9: Category
-                f'<span class="badge bg-{status_colors.get(eq.status.name if eq.status else "secondary", "secondary")}">{eq.status.name if eq.status else "None"}</span>',  # 10: Status
-                actions if not is_client_user else '',  # 11: Actions - always include
+                str(eq.units) if eq.units else '1',  # 7: Units/Quantity
+                f'₱{eq.item_amount:,.2f}' if eq.item_amount else '₱0.00',  # 8: Unit Price
+                f'₱{eq.total_value:,.2f}' if eq.total_value else '₱0.00',  # 9: Total Value
+                eq.end_user if eq.end_user else 'None',  # 10: End User
+                eq.category.name if eq.category else 'None',  # 11: Category
+                f'<span class="badge bg-{status_colors.get(eq.status.name if eq.status else "secondary", "secondary")}">{eq.status.name if eq.status else "None"}</span>',  # 12: Status
+                actions if not is_client_user else '',  # 13: Actions - always include
                 # Hidden columns
-                eq.fund_source if eq.fund_source else 'None',  # 12: Fund Source
-                eq.supplier if eq.supplier else 'None',  # 13: Supplier
-                eq.assigned_to if eq.assigned_to else 'None',  # 14: Assigned To
-                eq.location if eq.location else 'None',  # 15: Deployment Location
-                eq.current_location if eq.current_location else 'None',  # 16: Current Location
-                eq.item_purdate.strftime('%Y-%m-%d') if eq.item_purdate else 'None',  # 17: PO Date
-                eq.project_name if eq.project_name else 'None',  # 18: Project Name
+                eq.fund_source if eq.fund_source else 'None',  # 14: Fund Source
+                eq.supplier if eq.supplier else 'None',  # 15: Supplier
+                eq.assigned_to if eq.assigned_to else 'None',  # 16: Assigned To
+                eq.location if eq.location else 'None',  # 17: Deployment Location
+                eq.current_location if eq.current_location else 'None',  # 18: Current Location
+                eq.item_purdate.strftime('%Y-%m-%d') if eq.item_purdate else 'None',  # 19: PO Date
+                eq.project_name if eq.project_name else 'None',  # 20: Project Name
             ]
 
             data.append(row)
@@ -281,7 +295,9 @@ def equipment_detail_json(request, pk):
         "name": eq.item_name or "None",
         "desc": eq.item_desc if eq.item_desc not in (None, '') else "None",
         "addinfo": eq.additional_info if eq.additional_info not in (None, '') else "None",
+        "units": str(eq.units) if eq.units is not None else "1",
         "amount": f"{eq.item_amount:,.2f}" if eq.item_amount is not None else "None",
+        "total_value": f"{eq.total_value:,.2f}" if eq.total_value is not None else "None",
         "category": eq.category.name if eq.category and eq.category.name else "None",
         "status": eq.status.name if eq.status and eq.status.name else "None",
         "damage_reason": eq.damage_reason if eq.damage_reason not in (None, '') else "None",
@@ -815,7 +831,7 @@ def dashboard(request):
     # Total number and total cost of equipment per end user (currently held)
     enduser_qs = Equipment.objects.filter(is_archived=False, is_returned=False).exclude(end_user__isnull=True).exclude(end_user='').values('end_user').annotate(
         count=Count('id'),
-        total=Sum('item_amount')
+        total=Sum('total_value')
     ).order_by('-count')
     enduser_labels = [x['end_user'] for x in enduser_qs]
     enduser_counts = [x['count'] for x in enduser_qs]
@@ -824,7 +840,7 @@ def dashboard(request):
     # Equipments by Assigned To: Count and Total Cost
     assigned_qs = Equipment.objects.filter(is_archived=False, is_returned=False).exclude(assigned_to__isnull=True).exclude(assigned_to='').values('assigned_to').annotate(
         count=Count('id'),
-        total=Sum('item_amount')
+        total=Sum('total_value')
     ).order_by('-count')
     assigned_labels = [x['assigned_to'] for x in assigned_qs]
     assigned_counts = [x['count'] for x in assigned_qs]
@@ -1074,7 +1090,12 @@ def delete_status(request, id):
 @login_required
 @user_passes_test(is_admin_superadmin_encoder)
 def export_excel(request):
-    """Export equipment data to Excel format matching the import template"""
+    """Export equipment data to Excel format matching the import template
+    
+    Note: The exported file includes Total Value column, but during import,
+    this column is IGNORED and recalculated as (Units × Unit Price).
+    Users can import files with or without the Total Value column.
+    """
     try:
         from openpyxl import Workbook
         from openpyxl.styles import Font, Alignment
@@ -1083,11 +1104,11 @@ def export_excel(request):
         ws = wb.active
         ws.title = "Equipment Data"
         
-        # Headers matching import format (14 columns)
+        # Headers matching import format (15 columns - added Units and Total Value)
         headers = [
             'Property Number', 'Item Name', 'Item Description', 'Additional Info', 
             'Purchase Date', 'PO Number', 'Fund Source', 'Supplier', 
-            'Amount', 'Project Name', 'Assigned To', 'End User', 
+            'Units', 'Unit Price', 'Total Value', 'Project Name', 'Assigned To', 'End User', 
             'Location', 'Current Location'
         ]
         
@@ -1112,7 +1133,9 @@ def export_excel(request):
                 equipment.po_number or '',
                 equipment.fund_source or '',
                 equipment.supplier or '',
+                equipment.units or 1,
                 float(equipment.item_amount) if equipment.item_amount else 0.00,
+                float(equipment.total_value) if equipment.total_value else 0.00,
                 equipment.project_name or '',
                 equipment.assigned_to or '',
                 equipment.end_user or '',
@@ -1152,27 +1175,98 @@ def export_excel(request):
 @login_required
 @user_passes_test(is_admin_superadmin_encoder)
 def import_excel(request):
+    """Import equipment from Excel file
+    
+    Expected column order (must match export format):
+    Col 1:  Property Number
+    Col 2:  Item Name  
+    Col 3:  Item Description
+    Col 4:  Additional Info
+    Col 5:  Purchase Date
+    Col 6:  PO Number
+    Col 7:  Fund Source
+    Col 8:  Supplier
+    Col 9:  Units
+    Col 10: Unit Price
+    Col 11: Total Value ← OPTIONAL (auto-calculated as Units × Unit Price, ignored if present)
+    Col 12: Project Name
+    Col 13: Assigned To
+    Col 14: End User
+    Col 15: Location
+    Col 16: Current Location
+    
+    Note: Total Value in column 11 is ignored during import and recalculated automatically.
+    """
+    print(f"Import Excel called - Method: {request.method}, Has file: {bool(request.FILES.get('excel_file'))}")
+    
     if request.method == 'POST' and request.FILES.get('excel_file'):
         excel_file = request.FILES['excel_file']
+        print(f"Processing file: {excel_file.name}")
         try:
             wb = openpyxl.load_workbook(excel_file)
             ws = wb.active
             imported_count = 0
+            total_rows = ws.max_row - 1  # Excluding header
+            print(f"Excel file loaded. Total rows (excluding header): {total_rows}")
             
             for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+                # Skip completely empty rows
+                if not any(cell for cell in row):
+                    print(f"Row {idx}: Skipped (empty)")
+                    continue
+                
+                print(f"Row {idx}: Processing... First 3 values: {row[:3] if row else 'None'}")
+                    
                 try:
                     cleaned_row = [cell if cell not in ('', None) else None for cell in row]
-                    while len(cleaned_row) < 14:
+                    while len(cleaned_row) < 16:  # Ensure at least 16 columns (0-15)
                         cleaned_row.append(None)
                     
                     propertynum = cleaned_row[0]
-                    if propertynum and Equipment.objects.filter(item_propertynum=propertynum).exists():
-                        continue
+                    # Removed duplicate property number check to allow duplicates
                     
                     def get_safe_value(index, default=None):
                         return cleaned_row[index] if index < len(cleaned_row) else default
                     
-                    Equipment.objects.create(
+                    # Safe decimal conversion helper
+                    def safe_decimal(value, default=0.00):
+                        if value is None or value == '':
+                            return default
+                        try:
+                            from decimal import Decimal, InvalidOperation
+                            return Decimal(str(value))
+                        except (InvalidOperation, ValueError, TypeError):
+                            print(f"  Warning: Invalid decimal value '{value}', using default {default}")
+                            return Decimal(str(default))
+                    
+                    # Safe integer conversion helper
+                    def safe_int(value, default=1):
+                        if value is None or value == '':
+                            return default
+                        try:
+                            return int(float(value))  # float first to handle '1.0'
+                        except (ValueError, TypeError):
+                            print(f"  Warning: Invalid integer value '{value}', using default {default}")
+                            return default
+                    
+                    units = safe_int(get_safe_value(8), 1)
+                    unit_price = safe_decimal(get_safe_value(9), 0.00)
+                    total_value = units * unit_price
+                    
+                    print(f"  Parsed values - Units: {units}, Unit Price: {unit_price}, Total: {total_value}")
+                    
+                    # Get or create default category and status
+                    default_category = Category.objects.first()
+                    if not default_category:
+                        default_category = Category.objects.create(name="Default Category")
+                    
+                    default_status = Status.objects.first()
+                    if not default_status:
+                        default_status = Status.objects.create(name="Available")
+                    
+                    # Note: Index 10 is Total Value in exported files (ignored), so skip it
+                    # Create and store the equipment instance
+                    equipment = Equipment.objects.create(
                         item_propertynum=get_safe_value(0),
                         item_name=get_safe_value(1) or "Imported Item",
                         item_desc=get_safe_value(2),
@@ -1181,28 +1275,33 @@ def import_excel(request):
                         po_number=get_safe_value(5),
                         fund_source=get_safe_value(6),
                         supplier=get_safe_value(7),
-                        item_amount=get_safe_value(8) or 0.00,
-                        project_name=get_safe_value(9),
-                        assigned_to=get_safe_value(10),
-                        end_user=get_safe_value(11),
-                        location=get_safe_value(12),
-                        current_location=get_safe_value(13),
-                        category=Category.objects.get(pk=1),  
-                        status=Status.objects.get(pk=1),      
+                        units=units,
+                        item_amount=unit_price,
+                        total_value=total_value,
+                        project_name=get_safe_value(11),  # Skip index 10 (Total Value column)
+                        assigned_to=get_safe_value(12),
+                        end_user=get_safe_value(13),
+                        location=get_safe_value(14),
+                        current_location=get_safe_value(15),
+                        category=default_category,  
+                        status=default_status,      
                         emp=request.user,
                         created_by=request.user,
                         updated_by=request.user,
                     )
                     imported_count += 1
+                    print(f"Row {idx}: Equipment created successfully - ID: {equipment.id}, Name: {equipment.item_name}")
                     
+                    # Log the action for the newly created equipment
                     EquipmentActionLog.objects.create(
-                        equipment=Equipment.objects.filter(item_propertynum=propertynum).first() if propertynum else None,
+                        equipment=equipment,
                         action='create',
                         user=request.user,
                         summary=f"Imported equipment from Excel: {get_safe_value(1) or 'Unknown'} (Property #: {propertynum or 'None'})"
                     )
                     
                 except Category.DoesNotExist:
+                    print(f"Row {idx}: ERROR - Category not found")
                     request.session['import_error'] = {
                         'title': 'Category Not Found',
                         'message': f'Import stopped at Row {idx}: The specified category does not exist in the system.',
@@ -1219,6 +1318,7 @@ def import_excel(request):
                     return redirect('equipments:index')
                     
                 except Exception as e:
+                    print(f"Row {idx}: ERROR - Exception caught: {type(e).__name__}: {str(e)}")
                     error_title = "Import Failed"
                     error_msg = f"Import stopped at Row {idx}"
                     error_details = str(e)
@@ -1231,7 +1331,7 @@ def import_excel(request):
                         error_details = "The specified status does not exist in the system. Please verify that all statuses referenced in your Excel file have been created. Navigate to <strong>Admin Panel → Equipment Statuses</strong> to manage statuses."
                     elif "list index out of range" in str(e):
                         error_title = "Invalid File Format"
-                        error_details = f"Insufficient data columns detected. Expected 14 columns, but found {len(row) if 'row' in locals() else 'unknown'}. Please ensure your Excel file follows the correct template format."
+                        error_details = f"Insufficient data columns detected. Expected 15 columns (Property #, Name, Description, Additional Info, Purchase Date, PO Number, Fund Source, Supplier, Units, Unit Price, Project Name, Assigned To, End User, Location, Current Location), but found {len(row) if 'row' in locals() else 'unknown'}. Please ensure your Excel file follows the correct template format."
                     elif "does not exist" in str(e).lower():
                         error_title = "Missing Reference Data"
                         error_details = "Referenced data not found in the system. Please ensure all categories, statuses, and related data are properly configured before importing."
@@ -1243,9 +1343,15 @@ def import_excel(request):
                     }
                     return redirect('equipments:index')
             
-            messages.success(request, f"Excel import completed successfully. {imported_count} equipment(s) imported.")
+            print(f"Import loop completed. Total imported: {imported_count} out of {total_rows} rows")
+            
+            if imported_count == 0:
+                messages.warning(request, f"No equipment imported. The Excel file appears to have {total_rows} data row(s) but none could be processed. Please verify the file has data starting from row 2.")
+            else:
+                messages.success(request, f"Excel import completed successfully. {imported_count} equipment(s) imported from {total_rows} row(s).")
             
         except Exception as e:
+            print(f"FATAL ERROR during Excel import: {type(e).__name__}: {str(e)}")
             request.session['import_error'] = {
                 'title': 'File Processing Error',
                 'message': 'Unable to process the Excel file.',
@@ -1253,6 +1359,7 @@ def import_excel(request):
             }
             return redirect('equipments:index')
     else:
+        print(f"Import Excel - Invalid request. Method: {request.method}, Has file: {bool(request.FILES.get('excel_file'))}")
         messages.error(request, "Please select an Excel file to import.")
     
     return redirect('equipments:index')
@@ -1681,7 +1788,9 @@ def archived_equipment_table_json(request):
                 Q(po_number__icontains=search_value) |
                 Q(fund_source__icontains=search_value) |
                 Q(supplier__icontains=search_value) |
+                Q(units__icontains=search_value) |
                 Q(item_amount__icontains=search_value) |
+                Q(total_value__icontains=search_value) |
                 Q(assigned_to__icontains=search_value) |
                 Q(end_user__icontains=search_value) |
                 Q(location__icontains=search_value) |
@@ -1711,7 +1820,9 @@ def archived_equipment_table_json(request):
                 eq.item_name,
                 eq.item_desc or 'None',
                 eq.po_number or 'None',
+                eq.units,
                 f'₱{eq.item_amount:,.2f}',
+                f'₱{eq.total_value:,.2f}' if eq.total_value else '₱0.00',
                 eq.end_user or 'None',
                 eq.category.name,
                 eq.status.name + ("<span class='badge bg-secondary ms-1'>Deleted</span>" if eq.is_archived else ""),
@@ -1853,7 +1964,7 @@ def reports_page(request):
 
     # 3) Summary values
     from django.db.models import Value as V
-    total_asset = eqs.aggregate(total=Sum('item_amount'))['total'] or 0
+    total_asset = eqs.aggregate(total=Sum('total_value'))['total'] or 0
     categories  = Category.objects.all()
     suppliers   = (
         Equipment.objects
@@ -1873,7 +1984,7 @@ def reports_page(request):
     # 4) Assets by Category & Count
     asset_by_category = (
         eqs.values('category__name')
-           .annotate(total=Sum('item_amount'))
+           .annotate(total=Sum('total_value'))
            .order_by('-total')
     )
     asset_count_by_category = (
@@ -1885,7 +1996,7 @@ def reports_page(request):
     # 5) Status breakdown
     status_breakdown = (
         eqs.values('status__name')
-           .annotate(count=Count('id'), total=Sum('item_amount'))
+           .annotate(count=Count('id'), total=Sum('total_value'))
            .order_by('-count')
     )
 
@@ -1900,20 +2011,20 @@ def reports_page(request):
         eqs.filter(item_purdate__year=current_year)
            .annotate(period=TruncMonth('item_purdate'))
            .values('period')
-           .annotate(count=Count('id'), total=Sum('item_amount'))
+           .annotate(count=Count('id'), total=Sum('total_value'))
            .order_by('period')
     )
     yearly_qs = (
         eqs.annotate(period=ExtractYear('item_purdate'))
            .values('period')
-           .annotate(count=Count('id'), total=Sum('item_amount'))
+           .annotate(count=Count('id'), total=Sum('total_value'))
            .order_by('period')
     )
 
     # 8) Assets by location & status
     assets_by_location_status = (
         eqs.values('location', 'status__name')
-           .annotate(count=Count('id'), total=Sum('item_amount'))
+           .annotate(count=Count('id'), total=Sum('total_value'))
            .order_by('location', 'status__name')
     )
     locations = Equipment.objects.values_list('location', flat=True).distinct().order_by('location')
@@ -2172,7 +2283,7 @@ def generate_report(request):
 
     # Calculate total equipment value (needs to be done before exports)
     from django.db.models import Sum
-    total_amount = equipments.aggregate(total=Sum('item_amount'))['total'] or 0
+    total_amount = equipments.aggregate(total=Sum('total_value'))['total'] or 0
 
     # Handle column selection
     if request.GET.get('columns') or form.is_valid():

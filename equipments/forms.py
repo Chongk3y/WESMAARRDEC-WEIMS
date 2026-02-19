@@ -8,7 +8,7 @@ class EquipmentForm(forms.ModelForm):
         fields = [
             'item_name', 'item_desc', 'item_propertynum', 'additional_info',
             'item_purdate', 'po_number', 'fund_source', 'supplier',
-            'item_amount', 'project_name', 'assigned_to', 'end_user',
+            'units', 'item_amount', 'total_value', 'project_name', 'assigned_to', 'end_user',
             'location', 'current_location', 'category', 'status', 'emp',
             'created_by', 'updated_by', 'order_receipt', 'is_returned',
             'return_document', 'return_remarks', 'return_condition',
@@ -44,7 +44,9 @@ class ReportFilterForm(forms.Form):
             ('po_number', 'PO Number'),
             ('fund_source', 'Fund Source'),
             ('supplier', 'Supplier'),
-            ('item_amount', 'Amount'),
+            ('units', 'Units/Quantity'),
+            ('item_amount', 'Unit Price'),
+            ('total_value', 'Total Value'),
         ]),
         ('Status', [
             ('category', 'Category'),
@@ -82,7 +84,9 @@ class ReportFilterForm(forms.Form):
             'item_name',            # Name
             'item_desc',            # Description
             'po_number',            # PO Number
-            'item_amount',          # Amount
+            'units',                # Units/Quantity
+            'item_amount',          # Unit Price
+            'total_value',          # Total Value
             'end_user',             # End User
             'assigned_to',          # Assigned To
             'category',             # Category

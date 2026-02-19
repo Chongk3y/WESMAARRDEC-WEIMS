@@ -131,7 +131,9 @@
               <th>Name</th>
               <th>Description</th>
               <th>PO Number</th>
-              <th>Amount</th>
+              <th>Units</th>
+              <th>Unit Price</th>
+              <th>Total Value</th>
               <th>End User</th>
               <th>Category</th>
               <th>Status</th>
@@ -163,11 +165,22 @@
           
           <div class="col-md-8">
             <div class="row g-2">
+              <div class="col-sm-12 mb-2">
+                <div class="alert alert-info py-2 px-3 mb-0 d-flex align-items-center justify-content-between">
+                  <div>
+                    <small class="text-muted d-block" style="font-size: 0.7rem;">Equipment ID (Unique Identifier)</small>
+                    <span id="modalEquipmentId" class="fw-bold" style="font-size: 1.1rem;"></span>
+                  </div>
+                  <i class="bi bi-hash" style="font-size: 1.5rem; opacity: 0.3;"></i>
+                </div>
+              </div>
               <div class="col-sm-6"><small class="text-muted">Property #</small><div id="modalPropertyNum" class="fw-medium"></div></div>
               <div class="col-sm-6"><small class="text-muted">Name</small><div id="modalName" class="fw-medium"></div></div>
               <div class="col-sm-12"><small class="text-muted">Description</small><div id="modalDesc" class="fw-normal text-wrap"></div></div>
               <div class="col-sm-12"><small class="text-muted">Additional Info</small><div id="modalAddInfo" class="text-muted"></div></div>
-              <div class="col-sm-6"><small class="text-muted">Amount</small><div id="modalAmount" class="fw-medium text-success"></div></div>
+              <div class="col-sm-4"><small class="text-muted">Units</small><div id="modalUnits" class="fw-medium"></div></div>
+              <div class="col-sm-4"><small class="text-muted">Unit Price</small><div id="modalAmount" class="fw-medium text-success"></div></div>
+              <div class="col-sm-4"><small class="text-muted">Total Value</small><div id="modalTotalValue" class="fw-medium text-success"></div></div>
               <div class="col-sm-6"><small class="text-muted">Category</small><div id="modalCategory"></div></div>
               <div class="col-sm-6"><small class="text-muted">Status</small><div id="modalStatus"></div></div>
               <div class="col-sm-12" id="modalDamageReasonRow" style="display: none;"><small class="text-muted">Damage Reason</small><div id="modalDamageReason" class="fw-normal text-wrap text-danger"></div></div>
@@ -232,17 +245,29 @@ $(document).ready(function () {
     columns: [
       { title: "ID", visible: false },                     // 1: eq.id
       { title: "Image", orderable: false, className: "text-center" },        // 2
-      { title: "Property #", className: "text-nowrap" },                      // 3
+      { 
+        title: "Property #", 
+        className: "text-nowrap",
+        render: function(data, type, row) {
+          // row[0] is ID, data is property number
+          if (type === 'display') {
+            return '<div>' + (data || 'N/A') + '<br><small class="text-muted" style="font-size: 0.65rem;">ID: #' + row[0] + '</small></div>';
+          }
+          return data;
+        }
+      },                      // 3
       { title: "Name" },                            // 4
       { title: "Description" }, // Hidden on mobile                     // 5
       { title: "PO Number" }, // Hidden on mobile                       // 6
-      { title: "Amount", className: "text-nowrap" },                          // 7
-      { title: "End User" },                        // 8
-      { title: "Category" }, // Hidden on mobile                        // 9
-      { title: "Status" }, // Hidden on mobile                          // 10
-      { title: "Date Archived", className: "text-nowrap" },                   // 11
-      { title: "Archived By" },                     // 12
-      { title: "Actions", orderable: false, className: "text-center" }       // 13
+      { title: "Units", className: "text-nowrap" },                          // 7
+      { title: "Unit Price", className: "text-nowrap" },                          // 8
+      { title: "Total Value", className: "text-nowrap" },                          // 9
+      { title: "End User" },                        // 10
+      { title: "Category" }, // Hidden on mobile                        // 11
+      { title: "Status" }, // Hidden on mobile                          // 12
+      { title: "Date Archived", className: "text-nowrap" },                   // 13
+      { title: "Archived By" },                     // 14
+      { title: "Actions", orderable: false, className: "text-center" }       // 15
     ],
     columnDefs: [
       {
@@ -276,11 +301,14 @@ $(document).ready(function () {
     // Fetch and show the equipment details modal
     $.get(`/weims/equipment/${equipmentId}/json/`, function(data) {
         $('#modalImage').attr('src', data.image);
+        $('#modalEquipmentId').text('#' + equipmentId);
         $('#modalPropertyNum').text(data.propertynum);
         $('#modalName').text(data.name);
         $('#modalDesc').text(data.desc);
         $('#modalAddInfo').text(data.addinfo);
+        $('#modalUnits').text(data.units || 1);
         $('#modalAmount').text('₱' + data.amount);
+        $('#modalTotalValue').text('₱' + (data.total_value || '0.00'));
         $('#modalCategory').text(data.category);
         $('#modalStatus').text(data.status);
         

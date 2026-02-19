@@ -6,7 +6,12 @@
 <div class="container py-3">
   <div class="card shadow-sm border-0 mx-auto" style="max-width: 920px;">
     <div class="card-header text-white" style="background-color: #0e4a39;">
-      <h5 class="mb-0">Edit Equipment</h5>
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Edit Equipment</h5>
+        <span class="badge bg-light text-dark" style="font-size: 0.9rem;">
+          <i class="bi bi-hash"></i> ID: {{ equipment.id }}
+        </span>
+      </div>
     </div>
 
     <div class="card-body p-4">
@@ -16,6 +21,13 @@
 
           <!-- 🖼 Image & Property -->
           <div class="col-12 small fw-bold text-secondary border-bottom pb-1">Equipment Image & Info</div>
+          <div class="col-md-12 mb-2">
+            <div class="alert alert-info py-2 px-3 mb-0">
+              <small class="text-muted d-block" style="font-size: 0.75rem;">Equipment ID (Unique Identifier)</small>
+              <strong style="font-size: 1rem;">#{{ equipment.id }}</strong>
+              <small class="text-muted ms-2">- Use this ID to uniquely identify this equipment</small>
+            </div>
+          </div>
           <div class="col-md-6">
             <label class="form-label small">Equipment Image</label>
             <input type="file" class="form-control form-control-sm" name="user_image" id="user_image">
@@ -57,9 +69,17 @@
             <label class="form-label small">Supplier</label>
             <input type="text" class="form-control form-control-sm" name="supplier" value="{{ equipment.supplier }}">
           </div>
-          <div class="col-md-6">
-            <label class="form-label small">Amount</label>
-            <input type="number" step="0.01" class="form-control form-control-sm" name="item_amount" value="{{ equipment.item_amount }}">
+          <div class="col-md-4">
+            <label class="form-label small">Units/Quantity</label>
+            <input type="number" min="1" name="units" id="unitsInput" class="form-control form-control-sm" value="{{ equipment.units|default:'1' }}" oninput="calculateTotal()">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Unit Price</label>
+            <input type="number" step="0.01" class="form-control form-control-sm" name="item_amount" id="unitPriceInput" value="{{ equipment.item_amount }}" oninput="calculateTotal()">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small">Total Value</label>
+            <input type="text" id="totalValueDisplay" class="form-control form-control-sm" value="{{ equipment.total_value|default:'0.00' }}" readonly style="background-color: #e9ecef;">
           </div>
           <div class="col-md-6">
             <label class="form-label small">Order Receipt</label>
@@ -469,6 +489,20 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+
+  // Calculate total value automatically
+  function calculateTotal() {
+    const units = parseFloat(document.getElementById('unitsInput').value) || 1;
+    const unitPrice = parseFloat(document.getElementById('unitPriceInput').value) || 0;
+    const totalValue = units * unitPrice;
+    const totalValueDisplay = document.getElementById('totalValueDisplay');
+    totalValueDisplay.value = totalValue.toFixed(2);
+  }
+
+  // Calculate on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    calculateTotal();
+  });
 });
 </script>
 
