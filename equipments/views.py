@@ -313,9 +313,9 @@ def equipment_detail_json(request, pk):
         "location": eq.location if eq.location not in (None, '') else "None",
         "current_location": eq.current_location if eq.current_location not in (None, '') else "None",
         "created": eq.created_at.strftime("%b %d, %Y") if eq.created_at else "None",
-        "created_by": f"{eq.created_by.first_name} {eq.created_by.last_name}" if eq.created_by else "None",
+        "created_by": (f"{eq.created_by.first_name} {eq.created_by.last_name}".strip() or eq.created_by.username) if eq.created_by else "None",
         "updated": eq.updated_at.strftime("%b %d, %Y") if eq.updated_at else "None",
-        "updated_by": f"{eq.updated_by.first_name} {eq.updated_by.last_name}" if eq.updated_by else "None",
+        "updated_by": (f"{eq.updated_by.first_name} {eq.updated_by.last_name}".strip() or eq.updated_by.username) if eq.updated_by else "None",
     }
     return JsonResponse(data)
 
@@ -1254,6 +1254,7 @@ def import_excel(request):
                     total_value = units * unit_price
                     
                     print(f"  Parsed values - Units: {units}, Unit Price: {unit_price}, Total: {total_value}")
+                    print(f"  Import user: {request.user} (ID: {request.user.id}, Authenticated: {request.user.is_authenticated})")
                     
                     # Get or create default category and status
                     default_category = Category.objects.first()
@@ -1291,6 +1292,7 @@ def import_excel(request):
                     )
                     imported_count += 1
                     print(f"Row {idx}: Equipment created successfully - ID: {equipment.id}, Name: {equipment.item_name}")
+                    print(f"  Created by: {equipment.created_by} (ID: {equipment.created_by.id if equipment.created_by else 'None'})")
                     
                     # Log the action for the newly created equipment
                     EquipmentActionLog.objects.create(
@@ -1420,18 +1422,29 @@ def bulk_update_equipment(request):
             except Category.DoesNotExist:
                 update_details.append(f"Category to ID {category_id}")
         
+        # Create individual log entries for each equipment BEFORE updating
+        changes_summary = ', '.join(update_details)
+        for equipment in qs:
+            EquipmentActionLog.objects.create(
+                equipment=equipment,
+                action='edit',
+                user=request.user,
+                summary=f"Updated {equipment.item_name} (Property #: {equipment.item_propertynum or 'None'}) - Changed: {changes_summary}"
+            )
+        
+        # Now perform the update
         qs.update(**updates)
         
-        # Create a single log entry for the bulk action
+        # Also create a summary log entry for the bulk action
         equipment_list = ', '.join([f"{name} (#{prop})" for name, prop in equipment_names[:5]])
         if len(equipment_names) > 5:
             equipment_list += f" and {len(equipment_names) - 5} more"
         
         EquipmentActionLog.objects.create(
-            equipment=None,  # Bulk action, no single equipment
+            equipment=None,  # Bulk action summary
             action='edit',
             user=request.user,
-            summary=f"Bulk updated {len(equipment_names)} equipment(s): {equipment_list} - Changed: {', '.join(update_details)}"
+            summary=f"Bulk updated {len(equipment_names)} equipment(s): {equipment_list} - Changed: {changes_summary}"
         )
     return JsonResponse({'success': True})
 
@@ -1455,8 +1468,21 @@ def bulk_archive_equipment(request):
     equipment_names = list(qs.values_list('item_name', 'item_propertynum'))
     archived_count = qs.count()
     
-    # Archive the equipment
-    qs.update(is_archived=True)
+    # Archive the equipment - update each individually to set archived_by and date_archived
+    from django.utils import timezone
+    for equipment in qs:
+        equipment.is_archived = True
+        equipment.date_archived = timezone.now()
+        equipment.archived_by = request.user
+        equipment.save()
+        
+        # Create action log entry for EACH equipment
+        EquipmentActionLog.objects.create(
+            equipment=equipment,
+            action='archive',
+            user=request.user,
+            summary=f"Archived equipment: {equipment.item_name} (Property #: {equipment.item_propertynum or 'None'})"
+        )
     
     # Create history log entries for each equipment
     for equipment in qs:
@@ -1469,13 +1495,13 @@ def bulk_archive_equipment(request):
             change_reason='Bulk archive operation'
         )
     
-    # Create a single action log entry for the bulk operation
+    # Also create a summary action log entry for the bulk operation
     equipment_list = ', '.join([f"{name} (#{prop})" for name, prop in equipment_names[:5]])
     if len(equipment_names) > 5:
         equipment_list += f" and {len(equipment_names) - 5} more"
     
     EquipmentActionLog.objects.create(
-        equipment=None,  # Bulk action, no single equipment
+        equipment=None,  # Bulk action summary
         action='archive',
         user=request.user,
         summary=f"Bulk archived {archived_count} equipment(s): {equipment_list}"
@@ -1827,7 +1853,7 @@ def archived_equipment_table_json(request):
                 eq.category.name,
                 eq.status.name + ("<span class='badge bg-secondary ms-1'>Deleted</span>" if eq.is_archived else ""),
                 eq.date_archived.strftime('%Y-%m-%d %H:%M') if eq.date_archived else 'None',
-                f'{eq.archived_by.get_full_name() if eq.archived_by else "None"}',
+                (f'{eq.archived_by.first_name} {eq.archived_by.last_name}'.strip() or eq.archived_by.username) if eq.archived_by else "None",
                 actions
             ])
 
