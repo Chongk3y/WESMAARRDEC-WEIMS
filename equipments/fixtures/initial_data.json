@@ -1,0 +1,163 @@
+[
+{
+  "model": "equipments.category",
+  "pk": 2,
+  "fields": {
+    "name": "Appliances"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 3,
+  "fields": {
+    "name": "Audio Equipment"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 4,
+  "fields": {
+    "name": "Camera Equipment"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 5,
+  "fields": {
+    "name": "Computer Hardware"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 6,
+  "fields": {
+    "name": "Computer Peripheral"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 7,
+  "fields": {
+    "name": "Desktop Computer"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 8,
+  "fields": {
+    "name": "Display Equipments"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 9,
+  "fields": {
+    "name": "Furniture"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 10,
+  "fields": {
+    "name": "Laptop"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 11,
+  "fields": {
+    "name": "Mobile Devices"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 12,
+  "fields": {
+    "name": "Monitor"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 13,
+  "fields": {
+    "name": "Networking Device"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 14,
+  "fields": {
+    "name": "Office Equipment"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 15,
+  "fields": {
+    "name": "Other"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 16,
+  "fields": {
+    "name": "Storage Devices"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 17,
+  "fields": {
+    "name": "UPS"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 19,
+  "fields": {
+    "name": "Vehicle"
+  }
+},
+{
+  "model": "equipments.category",
+  "pk": 20,
+  "fields": {
+    "name": "Printer"
+  }
+},
+{
+  "model": "equipments.status",
+  "pk": 1,
+  "fields": {
+    "name": "Active"
+  }
+},
+{
+  "model": "equipments.status",
+  "pk": 2,
+  "fields": {
+    "name": "Maintenance"
+  }
+},
+{
+  "model": "equipments.status",
+  "pk": 3,
+  "fields": {
+    "name": "Damaged"
+  }
+},
+{
+  "model": "equipments.status",
+  "pk": 4,
+  "fields": {
+    "name": "Lost"
+  }
+},
+{
+  "model": "equipments.status",
+  "pk": 5,
+  "fields": {
+    "name": "Stored"
+  }
+}
+]

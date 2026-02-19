@@ -133,7 +133,33 @@ cd WESMAARRDEC
 python manage.py migrate
 ```
 
-### 6. Create a Superuser (Optional - if needed)
+> **Note**: The migrations will automatically seed default categories and statuses for equipment management.
+
+### 6. Seed Initial Data (Automatic via Migrations)
+
+The project includes default categories and statuses that are automatically created when you run migrations. However, if you need to re-seed or verify the data, you can use:
+
+```bash
+# Seed or verify initial data
+python manage.py seed_initial_data
+
+# Reset and re-create all initial data
+python manage.py seed_initial_data --reset
+```
+
+**Default Categories** (18 items):
+- Appliances, Audio Equipment, Camera Equipment, Computer Hardware, Computer Peripheral, Desktop Computer, Display Equipments, Furniture, Laptop, Mobile Devices, Monitor, Networking Device, Office Equipment, Other, Printer, Storage Devices, UPS, Vehicle
+
+**Default Statuses** (5 items):
+- Active, Maintenance, Damaged, Lost, Stored
+
+**Alternative: Using Fixtures**
+```bash
+# Load initial data from fixture file
+python manage.py loaddata equipments/fixtures/initial_data.json
+```
+
+### 7. Create a Superuser
 
 ```bash
 python manage.py createsuperuser
@@ -280,11 +306,20 @@ python manage.py makemigrations
 # Apply migrations
 python manage.py migrate
 
+# Seed initial data (categories and statuses)
+python manage.py seed_initial_data
+
+# Reset and re-create initial data
+python manage.py seed_initial_data --reset
+
 # Create database backup
 python manage.py dumpdata > backup.json
 
 # Load data from backup
 python manage.py loaddata backup.json
+
+# Export current categories and statuses to fixture
+python manage.py dumpdata equipments.Category equipments.Status --indent 2 > equipments/fixtures/initial_data.json
 ```
 
 ### User Management

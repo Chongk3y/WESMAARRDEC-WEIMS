@@ -9,28 +9,94 @@
 {% endif %}
 
 <div class="m-4">
+<!-- Header Section -->
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h5 class="fw-semibold mb-0">Equipment Management</h5>
+  
+  {% if is_admin or is_encoder %}
+  <!-- Quick Actions - Right Side -->
+  <div class="d-flex gap-2">
+    <a href="{% url 'equipments:add' %}" class="btn btn-success btn-sm"
+       data-bs-toggle="tooltip" title="Add new equipment">
+      <i class="bi bi-plus-circle"></i> <span class="d-none d-md-inline">Add</span>
+    </a>
+    
+    <form action="{% url 'equipments:import_excel' %}" method="post" enctype="multipart/form-data" id="importExcelForm" class="d-inline">
+      {% csrf_token %}
+      <input type="file" name="excel_file" accept=".xlsx,.xls" style="display:none;" id="importExcelInput" onchange="this.form.submit()">
+      <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('importExcelInput').click();"
+              data-bs-toggle="tooltip" title="Import equipment from Excel file">
+        <i class="bi bi-upload"></i> <span class="d-none d-md-inline">Import</span>
+      </button>
+    </form>
+
+    <a href="{% url 'equipments:export_excel' %}" class="btn btn-info btn-sm"
+       data-bs-toggle="tooltip" title="Export equipment to Excel">
+      <i class="bi bi-file-earmark-excel"></i> <span class="d-none d-md-inline">Export</span>
+    </a>
+  </div>
+  {% endif %}
 </div>
 
-<!-- Toolbar -->
-<div class="row gy-2 gx-2 align-items-center">
+<!-- Search and View Controls -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body p-3">
+    <div class="row g-2 align-items-center">
+      <!-- Search Bar -->
+      <div class="col-12 col-md-4 col-lg-3">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input type="text" id="tableSearch" class="form-control border-start-0 ps-0" placeholder="Search equipment...">
+        </div>
+      </div>
 
-  <!-- SEARCH BAR -->
-  <div class="col-md-3">
-    <input type="text" id="tableSearch" class="form-control form-control-sm" placeholder="Search equipment...">
+      <!-- View Controls -->
+      <div class="col-12 col-md-8 col-lg-9">
+        <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+          <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#advancedFilterModal"
+                  title="Advanced filtering options">
+            <i class="bi bi-funnel"></i> Filter
+          </button>
+
+          <button id="toggleOrderBtn" class="btn btn-outline-secondary btn-sm"
+                  title="Toggle sort order">
+            <i class="bi bi-sort-down"></i> <span class="d-none d-lg-inline">Oldest First</span>
+          </button>
+
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="columnVisibilityDropdown" 
+                    data-bs-toggle="dropdown" title="Show/hide columns">
+              <i class="bi bi-layout-three-columns"></i> <span class="d-none d-lg-inline">Columns</span>
+            </button>
+            <ul class="dropdown-menu" id="columnVisibilityMenu" aria-labelledby="columnVisibilityDropdown">
+              <!-- JS Populated -->
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 
-  <!-- BULK ACTIONS GROUP -->
-  {% if is_admin or is_encoder %}
-  <div class="col-12 col-md-auto">
+<!-- Bulk Actions Panel -->
+{% if is_admin or is_encoder %}
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body p-3">
+    <div class="d-flex align-items-center mb-2">
+      <h6 class="mb-0 text-muted fw-semibold small">
+        <i class="bi bi-check2-square me-1"></i>Bulk Actions
+      </h6>
+      <span class="badge bg-secondary ms-2" id="selectedCountBadge">0 selected</span>
+    </div>
+    
     <form id="bulkUpdateForm" method="post" action="{% url 'equipments:bulk_update' %}">
       {% csrf_token %}
-      <div class="row gy-2 gx-2 align-items-center">
-        
-        <!-- Status Select -->
-        <div class="col-12 col-sm-auto">
-          <select name="status_id" class="form-select form-select-sm w-100" style="min-width: 140px;">
+      <div class="row g-2 align-items-center">
+        <!-- Update Controls -->
+        <div class="col-12 col-sm-6 col-lg-3">
+          <select name="status_id" class="form-select form-select-sm">
             <option value="">Change Status...</option>
             {% for status in statuses %}
               {% if status.name != 'Lost' and status.name != 'Damaged' %}
@@ -40,9 +106,8 @@
           </select>
         </div>
         
-        <!-- Category Select -->
-        <div class="col-12 col-sm-auto">
-          <select name="category_id" class="form-select form-select-sm w-100" style="min-width: 140px;">
+        <div class="col-12 col-sm-6 col-lg-3">
+          <select name="category_id" class="form-select form-select-sm">
             <option value="">Change Category...</option>
             {% for category in categories %}
               <option value="{{ category.id }}">{{ category.name }}</option>
@@ -50,88 +115,32 @@
           </select>
         </div>
         
-        <!-- Apply Button -->
-        <div class="col-12 col-sm-auto">
-          <button type="submit" class="btn btn-outline-primary btn-sm w-100 w-sm-auto" disabled
-                  title="Apply status or category changes to multiple selected equipment at once">
-            Apply to Selected
-          </button>
-        </div>
+        <!-- Action Buttons -->
+        <div class="col-12 col-lg-6">
+          <div class="btn-group w-100" role="group">
+            <button type="submit" class="btn btn-outline-primary btn-sm" disabled
+                    title="Apply changes to selected equipment">
+              <i class="bi bi-check-circle"></i> Apply
+            </button>
 
-        <!-- Bulk Archive Button -->
-        <div class="col-12 col-sm-auto">
-          <button type="button" id="bulkArchiveBtn" class="btn btn-outline-warning btn-sm w-100 w-sm-auto" disabled
-                  title="Archive multiple selected equipment to move them to archived status">
-            <i class="bi bi-archive text-muted"></i> Archive Selected
-          </button>
-        </div>
+            <button type="button" id="bulkArchiveBtn" class="btn btn-outline-warning btn-sm" disabled
+                    title="Archive selected equipment">
+              <i class="bi bi-archive text-muted"></i> Archive
+            </button>
 
-        <!-- Bulk Delete Button - Admin/Superadmin Only -->
-        {% if is_admin or is_superadmin %}
-        <div class="col-12 col-sm-auto">
-          <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger btn-sm w-100 w-sm-auto" disabled
-                  title="Permanently delete multiple selected equipment from the system">
-            <i class="bi bi-trash text-muted"></i> Delete Selected
-          </button>
+            {% if is_admin or is_superadmin %}
+            <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger btn-sm" disabled
+                    title="Permanently delete selected equipment">
+              <i class="bi bi-trash text-muted"></i> Delete
+            </button>
+            {% endif %}
+          </div>
         </div>
-        {% endif %}
-
       </div>
     </form>
   </div>
-  {% endif %}
-
-  <!-- FILTER & ORDERING TOOLS -->
-  <div class="col-md-auto d-flex flex-wrap gap-2">
-    <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#advancedFilterModal"
-            title="Click to open advanced filtering options. Search equipment by specific criteria like status, category, date ranges, and more">
-      <i class="bi bi-funnel"></i> Filter
-    </button>
-
-    <button id="toggleOrderBtn" class="btn btn-outline-secondary btn-sm"
-            data-bs-toggle="tooltip" data-bs-placement="top" 
-            title="Click to switch between showing newest equipment first or oldest equipment first in the table">
-      Show Oldest First
-    </button>
-
-    <div class="dropdown">
-      <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="columnVisibilityDropdown" data-bs-toggle="dropdown" aria-expanded="false"
-              title="Click to show or hide table columns. Check/uncheck items to customize which information is displayed in the equipment table">
-        Columns
-      </button>
-      <ul class="dropdown-menu" id="columnVisibilityMenu" aria-labelledby="columnVisibilityDropdown">
-        <!-- JS Populated -->
-      </ul>
-    </div>
-  </div>
-
-  {% if is_admin or is_encoder %}
-  <!-- ADMIN/ENCODER TOOLS -->
-  <div class="col-md-auto d-flex flex-wrap gap-2">
-    <form action="{% url 'equipments:import_excel' %}" method="post" enctype="multipart/form-data" id="importExcelForm">
-      {% csrf_token %}
-      <input type="file" name="excel_file" accept=".xlsx,.xls" style="display:none;" id="importExcelInput" onchange="this.form.submit()">
-      <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('importExcelInput').click();"
-              data-bs-toggle="tooltip" data-bs-placement="top" 
-              title="Click to select an Excel file (.xlsx or .xls) to import equipment data. File will be uploaded and processed automatically">
-        <i class="bi bi-upload"></i> Import Excel
-      </button>
-    </form>
-
-    <a href="{% url 'equipments:export_excel' %}" class="btn btn-outline-info btn-sm"
-       data-bs-toggle="tooltip" data-bs-placement="top" 
-       title="Download all equipment data as an Excel file. Includes currently filtered results if any filters are applied">
-      <i class="bi bi-file-earmark-excel"></i> Export Excel
-    </a>
-
-    <a href="{% url 'equipments:add' %}" class="btn btn-outline-success btn-sm"
-       data-bs-toggle="tooltip" data-bs-placement="top" 
-       title="Click to open the form for adding new equipment to the system">
-      <i class="bi bi-plus-circle"></i> Add
-    </a>
-  </div>
-  {% endif %}
 </div>
+{% endif %}
 
 
   <!-- Equipment Table Card -->
@@ -579,6 +588,30 @@
 
 <!-- Compact Table Style -->
 <style>
+  /* Improved search bar styling */
+  #tableSearch {
+    border-left: none !important;
+  }
+  
+  #tableSearch:focus {
+    box-shadow: none;
+    border-color: #ced4da;
+  }
+  
+  .input-group:focus-within .input-group-text {
+    border-color: #86b7fe;
+  }
+  
+  .input-group:focus-within #tableSearch {
+    border-color: #86b7fe;
+  }
+
+  /* Badge styling */
+  #selectedCountBadge {
+    font-weight: 500;
+    font-size: 0.75rem;
+  }
+
   /* Compact table styling */
   .compact-table td,
   .compact-table th {
@@ -611,20 +644,6 @@
   }
 
   /* Search bar and select/input sizes */
-  #tableSearch {
-    min-width: 250px;
-    max-width: 400px;
-    padding-left: 1.5rem;
-    border: 1px solid #ced4da;
-    transition: box-shadow 0.2s ease-in-out;
-    font-size: 0.8rem;
-  }
-
-  #tableSearch:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
-    border-color: #80bdff;
-  }
-
   select.form-select-sm,
   .btn-sm {
     font-size: 0.75rem;
@@ -903,10 +922,10 @@ table = $('#equipmentTable').DataTable({
   $('#toggleOrderBtn').on('click', function () {
     if (orderDesc) {
       table.order([1, 'asc']).draw(); // Oldest first
-      $(this).text('Show Newest First');
+      $(this).html('<i class="bi bi-sort-up"></i> <span class="d-none d-lg-inline">Newest First</span>');
     } else {
       table.order([1, 'desc']).draw(); // Newest first
-      $(this).text('Show Oldest First');
+      $(this).html('<i class="bi bi-sort-down"></i> <span class="d-none d-lg-inline">Oldest First</span>');
     }
     orderDesc = !orderDesc;
   });
@@ -1207,6 +1226,9 @@ $(document).on('change', '.column-select', function () {
     const bulkDeleteBtn = $('#bulkDeleteBtn');
     const bulkUpdateForm = $('#bulkUpdateForm');
     const applyBtn = bulkUpdateForm.find('button[type="submit"]');
+    
+    // Update selected count badge
+    $('#selectedCountBadge').text(selectedCount + ' selected');
     
     if (selectedCount > 0) {
       // Enable buttons
